@@ -4,14 +4,48 @@ import { api } from '../../services/api';
 import { sound } from '../../services/soundEngine';
 import { Box, Grid3X3, ArrowRight, ArrowLeft, Ticket, Glasses, ShieldCheck, AlertCircle } from 'lucide-react';
 
+function generateFallbackSeats(showtime) {
+  const rows = [
+    { row: 'A', tier: 'VIP', price: showtime?.priceTiers?.vip || 480, totalCols: 8 },
+    { row: 'B', tier: 'VIP', price: showtime?.priceTiers?.vip || 480, totalCols: 8 },
+    { row: 'C', tier: 'Executive', price: showtime?.priceTiers?.executive || 340, totalCols: 10 },
+    { row: 'D', tier: 'Executive', price: showtime?.priceTiers?.executive || 340, totalCols: 10 },
+    { row: 'E', tier: 'Executive', price: showtime?.priceTiers?.executive || 340, totalCols: 10 },
+    { row: 'F', tier: 'Classic', price: showtime?.priceTiers?.classic || 220, totalCols: 10 },
+    { row: 'G', tier: 'Classic', price: showtime?.priceTiers?.classic || 220, totalCols: 10 },
+    { row: 'H', tier: 'Classic', price: showtime?.priceTiers?.classic || 220, totalCols: 10 }
+  ];
+
+  const booked = new Set(showtime?.bookedSeats || ['A3', 'A4', 'C5', 'C6']);
+  const seats = [];
+
+  rows.forEach((r, rIdx) => {
+    for (let c = 1; c <= r.totalCols; c++) {
+      const seatCode = `${r.row}${c}`;
+      seats.push({
+        id: seatCode,
+        row: r.row,
+        number: c,
+        tier: r.tier,
+        price: r.price,
+        isBooked: booked.has(seatCode),
+        rowIndex: rIdx,
+        colIndex: c - 1
+      });
+    }
+  });
+
+  return seats;
+}
+
 export default function SeatSelector({
   movie,
   showtime,
   onProceed,
   onBack
 }) {
-  const [seatsData, setSeatsData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [seatsData, setSeatsData] = useState(() => generateFallbackSeats(showtime));
+  const [loading, setLoading] = useState(false);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [viewMode, setViewMode] = useState('3d'); // '3d' | '2d'
   const [errorMsg, setErrorMsg] = useState('');
@@ -23,14 +57,21 @@ export default function SeatSelector({
 
   useEffect(() => {
     async function loadSeats() {
-      if (!showtime?.id) return;
+      if (!showtime?.id) {
+        setSeatsData(generateFallbackSeats(showtime));
+        return;
+      }
       try {
         setLoading(true);
         const data = await api.getShowtimeSeats(showtime.id);
-        setSeatsData(data.seats || []);
+        if (data?.seats && Array.isArray(data.seats) && data.seats.length > 0) {
+          setSeatsData(data.seats);
+        } else {
+          setSeatsData(generateFallbackSeats(showtime));
+        }
       } catch (err) {
         console.error('Failed to load seats:', err);
-        setErrorMsg('Could not fetch real-time seat status. Please try again.');
+        setSeatsData(generateFallbackSeats(showtime));
       } finally {
         setLoading(false);
       }

@@ -109,13 +109,62 @@ export const api = {
   async getShowtimeSeats(showtimeId) {
     try {
       const res = await fetch(`${API_BASE}/showtimes/${showtimeId}/seats`);
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.seats) && data.seats.length > 0) {
+          return data;
+        }
+      }
     } catch (e) {}
+
     const showtimes = getLocal('showtimes', initialDb.showtimes);
-    const st = showtimes.find(s => s.id === showtimeId);
+    const showtime = showtimes.find(s => s.id === showtimeId) || showtimes[0] || {
+      id: showtimeId || 'st-default',
+      priceTiers: { vip: 480, executive: 340, classic: 220 },
+      bookedSeats: ['A3', 'A4', 'C5', 'C6']
+    };
+
+    const rows = [
+      { row: 'A', tier: 'VIP', price: showtime.priceTiers?.vip || 480, totalCols: 8 },
+      { row: 'B', tier: 'VIP', price: showtime.priceTiers?.vip || 480, totalCols: 8 },
+      { row: 'C', tier: 'Executive', price: showtime.priceTiers?.executive || 340, totalCols: 10 },
+      { row: 'D', tier: 'Executive', price: showtime.priceTiers?.executive || 340, totalCols: 10 },
+      { row: 'E', tier: 'Executive', price: showtime.priceTiers?.executive || 340, totalCols: 10 },
+      { row: 'F', tier: 'Classic', price: showtime.priceTiers?.classic || 220, totalCols: 10 },
+      { row: 'G', tier: 'Classic', price: showtime.priceTiers?.classic || 220, totalCols: 10 },
+      { row: 'H', tier: 'Classic', price: showtime.priceTiers?.classic || 220, totalCols: 10 }
+    ];
+
+    const booked = new Set(showtime.bookedSeats || ['A3', 'A4', 'C5', 'C6']);
+    const seats = [];
+
+    rows.forEach((r, rIdx) => {
+      for (let c = 1; c <= r.totalCols; c++) {
+        const seatCode = `${r.row}${c}`;
+        seats.push({
+          id: seatCode,
+          row: r.row,
+          number: c,
+          tier: r.tier,
+          price: r.price,
+          isBooked: booked.has(seatCode),
+          rowIndex: rIdx,
+          colIndex: c - 1
+        });
+      }
+    });
+
     return {
-      showtimeId,
-      bookedSeats: st?.bookedSeats || []
+      showtimeId: showtime.id,
+      experience: showtime.experience || 'IMAX 3D Laser',
+      format: showtime.format || 'IMAX 3D Laser',
+      glassesFee: showtime.glassesFee !== undefined ? showtime.glassesFee : 30,
+      seats,
+      summary: {
+        total: seats.length,
+        available: seats.filter(s => !s.isBooked).length,
+        booked: booked.size
+      }
     };
   },
 

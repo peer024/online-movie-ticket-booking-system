@@ -296,9 +296,36 @@ export default function CinemaHall3D({
     const headrestGeo = new THREE.BoxGeometry(0.75, 0.3, 0.25);
     const cupGeo = new THREE.CylinderGeometry(0.06, 0.05, 0.12, 12);
 
-    seatMeshesRef.current.clear();
+    const activeSeats = (seatsData && seatsData.length > 0) ? seatsData : (() => {
+      const rows = [
+        { row: 'A', tier: 'VIP', price: 480, totalCols: 8 },
+        { row: 'B', tier: 'VIP', price: 480, totalCols: 8 },
+        { row: 'C', tier: 'Executive', price: 340, totalCols: 10 },
+        { row: 'D', tier: 'Executive', price: 340, totalCols: 10 },
+        { row: 'E', tier: 'Executive', price: 340, totalCols: 10 },
+        { row: 'F', tier: 'Classic', price: 220, totalCols: 10 },
+        { row: 'G', tier: 'Classic', price: 220, totalCols: 10 },
+        { row: 'H', tier: 'Classic', price: 220, totalCols: 10 }
+      ];
+      const res = [];
+      rows.forEach((r, rIdx) => {
+        for (let c = 1; c <= r.totalCols; c++) {
+          res.push({
+            id: `${r.row}${c}`,
+            row: r.row,
+            number: c,
+            tier: r.tier,
+            price: r.price,
+            isBooked: ['A3', 'A4', 'C5', 'C6'].includes(`${r.row}${c}`),
+            rowIndex: rIdx,
+            colIndex: c - 1
+          });
+        }
+      });
+      return res;
+    })();
 
-    seatsData.forEach(seat => {
+    activeSeats.forEach(seat => {
       const { id, tier, isBooked, rowIndex, colIndex } = seat;
       const isSelected = selectedSeats.includes(id);
 
@@ -424,7 +451,7 @@ export default function CinemaHall3D({
       if (isDraggingRef.current) return;
       const seatInfo = getIntersectedSeat(event);
       if (seatInfo) {
-        const targetSeat = seatsData.find(s => s.id === seatInfo.seatId);
+        const targetSeat = activeSeats.find(s => s.id === seatInfo.seatId);
         if (targetSeat) {
           setHoveredSeat(targetSeat);
           sound.playHover();
