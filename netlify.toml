@@ -1,0 +1,22 @@
+# Netlify Configuration for CineVerse 3D (Full-Stack Unified Deployment)
+
+[build]
+  command = "cd frontend && npm install && npm run build"
+  publish = "frontend/dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# Route API requests to Netlify Serverless Function
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/api/:splat"
+  status = 200
+  force = true
+
+# Fallback for Single Page Application client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

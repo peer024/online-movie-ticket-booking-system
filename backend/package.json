@@ -1,0 +1,17 @@
+{
+  "name": "cineverse-backend",
+  "version": "1.0.0",
+  "description": "Backend API for CineVerse 3D Online Movie Ticket Booking System",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "serverless-http": "^4.0.0",
+    "uuid": "^9.0.1"
+  }
+}

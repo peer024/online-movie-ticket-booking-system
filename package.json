@@ -1,0 +1,28 @@
+{
+  "name": "online-movie-ticket-booking-system",
+  "version": "1.0.0",
+  "description": "CineVerse 3D — Next-Gen WebGL Online Movie Ticket Booking & Management System",
+  "type": "module",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "start": "node backend/src/server.js",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "start:backend": "npm start --prefix backend",
+    "start:frontend": "npm run dev --prefix frontend"
+  },
+  "keywords": [
+    "cinema",
+    "threejs",
+    "movie-ticket-booking",
+    "webgl",
+    "seat-booking",
+    "react",
+    "express"
+  ],
+  "author": "Kombaiya & Ashik Chandru",
+  "license": "MIT",
+  "dependencies": {
+    "serverless-http": "^4.0.0"
+  }
+}
