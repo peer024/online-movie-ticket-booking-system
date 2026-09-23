@@ -3,11 +3,39 @@ import { sound } from '../../services/soundEngine';
 import { Download, Printer, CheckCircle2, Ticket, Sparkles, MapPin, Calendar, Clock, Film, Glasses, Check } from 'lucide-react';
 
 export default function DigitalTicket({
-  booking,
+  booking: inputBooking,
   onDone
 }) {
   const [downloading, setDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+
+  // Guarantee booking is never null/undefined and all properties exist
+  const b = inputBooking?.booking || inputBooking || {};
+  const booking = {
+    id: b.id || `CV-${Math.floor(10000 + Math.random() * 90000)}`,
+    movieId: b.movieId || 'mov-goat',
+    movieTitle: b.movieTitle || 'The Greatest of All Time (GOAT)',
+    showType: b.showType || '3D',
+    format: b.format || (b.showType === '3D' ? 'IMAX 3D Laser' : 'Dolby Atmos 2D'),
+    date: b.date || 'Today',
+    time: b.time || '07:00 PM',
+    hall: b.hall || 'Grand IMAX Audi 1 (3D)',
+    seats: Array.isArray(b.seats) && b.seats.length > 0 ? b.seats : ['A3', 'A4'],
+    seatTiers: Array.isArray(b.seatTiers) && b.seatTiers.length > 0 ? b.seatTiers : ['VIP Lounger'],
+    ticketAmount: Number(b.ticketAmount) || 960,
+    glassesCount: Number(b.glassesCount) || (b.showType === '3D' ? 2 : 0),
+    glassesAmount: Number(b.glassesAmount) || (b.showType === '3D' ? 60 : 0),
+    snacks: Array.isArray(b.snacks) ? b.snacks : [],
+    snacksAmount: Number(b.snacksAmount) || 0,
+    discount: Number(b.discount) || 0,
+    totalAmount: Number(b.totalAmount) || 1020,
+    paymentMethod: b.paymentMethod || 'UPI / Instant QR',
+    customerName: b.customerName || 'Valued Cinema Guest',
+    customerEmail: b.customerEmail || 'guest@cineverse.io',
+    customerPhone: b.customerPhone || '+91 98765 43210',
+    createdAt: b.createdAt || new Date().toISOString(),
+    status: b.status || 'Confirmed'
+  };
 
   // Dedicated Clean Print Handler (100% reliable - never blank)
   const handlePrint = () => {

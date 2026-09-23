@@ -236,7 +236,11 @@ export const api = {
         setLocal('showtimes', showtimes);
       }
     }
-    return confirmed;
+    return {
+      success: true,
+      booking: confirmed,
+      ...confirmed
+    };
   },
 
   async getBookings() {
