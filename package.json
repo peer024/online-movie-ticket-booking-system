@@ -23,6 +23,9 @@
   "author": "Kombaiya & Ashik Chandru",
   "license": "MIT",
   "dependencies": {
-    "serverless-http": "^4.0.0"
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "serverless-http": "^4.0.0",
+    "uuid": "^9.0.1"
   }
 }

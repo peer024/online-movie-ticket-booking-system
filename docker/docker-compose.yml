@@ -3,8 +3,8 @@ version: '3.8'
 services:
   cineverse:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
     container_name: cineverse-3d-app
     restart: always
     ports:
@@ -13,4 +13,4 @@ services:
       - NODE_ENV=production
       - PORT=5000
     volumes:
-      - ./backend/data:/app/backend/data
+      - ../backend/data:/app/backend/data
