@@ -7,8 +7,8 @@ const __dirname = path.dirname(__filename);
 const BUNDLED_DB = path.join(__dirname, '..', 'data', 'db.json');
 let DB_FILE = BUNDLED_DB;
 
-// If running in Netlify Functions or AWS Lambda, use writable /tmp
-if (process.env.NETLIFY || process.env.LAMBDA_TASK_ROOT) {
+// If running in Netlify Functions, Vercel, or AWS Lambda, use writable /tmp
+if (process.env.NETLIFY || process.env.VERCEL || process.env.LAMBDA_TASK_ROOT) {
   DB_FILE = path.join('/tmp', 'cineverse_db.json');
 }
 
