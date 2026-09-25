@@ -4,6 +4,7 @@
   "description": "CineVerse 3D — Next-Gen WebGL Online Movie Ticket Booking & Management System",
   "type": "module",
   "scripts": {
+    "dev": "node start-dev.js",
     "build": "node build.js",
     "start": "node backend/src/server.js",
     "dev:backend": "npm run dev --prefix backend",
