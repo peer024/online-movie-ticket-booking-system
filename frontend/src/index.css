@@ -4,75 +4,78 @@
 
 @layer base {
   :root {
-    --color-primary: #00f5ff;
-    --color-accent: #8b5cf6;
-    --color-gold: #f59e0b;
-    --color-bg: #07090e;
+    --color-primary: #e11d48;
+    --color-accent: #2563eb;
+    --color-gold: #d97706;
+    --color-bg: #f8fafc;
   }
 
   body {
-    background-color: #07090e;
-    color: #e2e8f0;
+    background-color: #f8fafc;
+    color: #0f172a;
     overflow-x: hidden;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
-  /* Custom Sleek Scrollbar */
+  /* Custom Clean Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #0b0f19;
+    background: #f1f5f9;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1e293b;
+    background: #cbd5e1;
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #00f5ff;
+    background: #94a3b8;
   }
 }
 
-/* Standard Cinema Card and Container Styles */
+/* Standard Clean Cinema Card and Container Styles */
 .cinema-card {
-  background: #0d121f;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .glass-panel {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .glass-card {
-  background: #0d1322;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .glass-button {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #1e293b;
   transition: all 0.2s ease;
 }
 
 .glass-button:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(6, 182, 212, 0.5);
+  background: #f1f5f9;
+  border-color: #94a3b8;
 }
 
 /* Cinema Accent Badges */
 .badge-gold {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
 }
 
 .badge-cyan {
-  background: rgba(6, 182, 212, 0.15);
-  color: #06b6d4;
-  border: 1px solid rgba(6, 182, 212, 0.3);
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
 }
 
 /* =================================================== */
@@ -80,7 +83,7 @@
 /* =================================================== */
 @media print {
   @page {
-    margin: 1.5cm;
+    margin: 1cm;
     size: A4 portrait;
   }
 
@@ -101,10 +104,10 @@
   /* Printable ticket container */
   .ticket-print-target {
     display: block !important;
-    background: #090d16 !important;
-    color: #ffffff !important;
-    border: 2px solid #00f5ff !important;
-    border-radius: 20px !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 16px !important;
     padding: 24px !important;
     margin: 0 auto !important;
     max-width: 650px !important;

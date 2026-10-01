@@ -37,9 +37,9 @@ export default function AdminDashboard({ onExitAdmin, onLogout }) {
     movieId: '',
     date: 'Today',
     time: '04:30 PM',
-    hall: 'Grand IMAX Audi 1',
-    experience: 'IMAX 3D Laser',
-    sound: 'Dolby Atmos 12-Channel',
+    hall: 'Audi 1',
+    experience: 'Dolby Atmos',
+    sound: 'Dolby Atmos 7.1',
     priceVip: 450,
     priceExecutive: 300,
     priceClassic: 190
@@ -155,14 +155,13 @@ export default function AdminDashboard({ onExitAdmin, onLogout }) {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-4 border-b border-white/10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-4 border-b border-gray-200">
         <div className="flex items-center gap-4">
           <button
             onClick={() => {
-              sound.playClick();
               onExitAdmin();
             }}
-            className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-all flex items-center gap-2 text-xs font-semibold"
+            className="p-2.5 rounded-xl bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 transition-all flex items-center gap-2 text-xs font-semibold cursor-pointer shadow-xs"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Customer View</span>
@@ -170,28 +169,27 @@ export default function AdminDashboard({ onExitAdmin, onLogout }) {
 
           <button
             onClick={() => {
-              sound.playClick();
               if (onLogout) {
                 onLogout();
               } else {
                 onExitAdmin();
               }
             }}
-            className="p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 border border-rose-500/30 transition-all flex items-center gap-2 text-xs font-semibold"
+            className="p-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-all flex items-center gap-2 text-xs font-semibold cursor-pointer"
             title="Lock Console and require password again"
           >
             <Lock className="w-4 h-4" />
-            <span>Lock & Sign Out</span>
+            <span>Sign Out</span>
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
-                THEATER OPERATOR SYSTEM
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">
+                ADMINISTRATION CONSOLE
               </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-              CineVerse Central Command
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+              CinePass Cinema Admin Portal
             </h1>
           </div>
         </div>

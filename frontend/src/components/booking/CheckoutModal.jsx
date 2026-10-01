@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { api } from '../../services/api';
-import { sound } from '../../services/soundEngine';
 import confetti from 'canvas-confetti';
-import { CreditCard, QrCode, ShieldCheck, Tag, X, CheckCircle, ArrowRight, Sparkles, Smartphone } from 'lucide-react';
+import { CreditCard, QrCode, ShieldCheck, Tag, X, ArrowRight } from 'lucide-react';
 
 export default function CheckoutModal({
   bookingInfo,
@@ -15,16 +14,12 @@ export default function CheckoutModal({
     seats,
     seatObjects,
     subtotal,
-    glassesCount = 0,
-    glassesAmount = 0,
-    showType = '2D',
-    format = 'Standard',
-    snacks,
-    snacksSubtotal
+    snacks = [],
+    snacksSubtotal = 0
   } = bookingInfo;
 
   const [customerName, setCustomerName] = useState('Alex Mercer');
-  const [customerEmail, setCustomerEmail] = useState('alex.mercer@cineverse.io');
+  const [customerEmail, setCustomerEmail] = useState('alex.mercer@cinepass.com');
   const [customerPhone, setCustomerPhone] = useState('+91 98765 43210');
   const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi' | 'card'
   const [promoCodeInput, setPromoCodeInput] = useState('');
@@ -34,62 +29,49 @@ export default function CheckoutModal({
   const [processing, setProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Card details
-  const [cardNumber, setCardNumber] = useState('4532 •••• •••• 9924');
-  const [cardExp, setCardExp] = useState('08/28');
-  const [cardCvv, setCardCvv] = useState('784');
-
-  const grossTotal = subtotal + glassesAmount + snacksSubtotal;
+  const grossTotal = subtotal + snacksSubtotal;
   const netTotal = Math.max(0, grossTotal - promoDiscount);
 
   const handleApplyPromo = () => {
-    sound.playClick();
     const code = promoCodeInput.trim().toUpperCase();
     if (code === 'CINE50') {
-      const discount = Math.min(150, Math.round(grossTotal * 0.5));
+      const discount = Math.min(100, Math.round(grossTotal * 0.5));
       setAppliedPromo('CINE50');
       setPromoDiscount(discount);
-      setPromoMsg('🎉 50% Cyber Discount Applied (Max ₹150)!');
+      setPromoMsg('🎉 50% Discount Applied (Max ₹100)!');
     } else if (code === 'BLOCKBUSTER') {
       setAppliedPromo('BLOCKBUSTER');
-      setPromoDiscount(100);
-      setPromoMsg('🎉 Flat ₹100 Blockbuster voucher applied!');
-    } else if (code === 'VIPFREE') {
-      setAppliedPromo('VIPFREE');
-      setPromoDiscount(200);
-      setPromoMsg('🎉 ₹200 VIP Premiere Credit applied!');
+      setPromoDiscount(75);
+      setPromoMsg('🎉 Flat ₹75 Movie voucher applied!');
     } else {
-      sound.playError();
-      setPromoMsg('❌ Invalid promo code. Try CINE50, BLOCKBUSTER, or VIPFREE.');
+      setPromoMsg('❌ Invalid promo code. Try CINE50 or BLOCKBUSTER.');
     }
   };
 
   const handlePay = async () => {
     if (!customerName || !customerEmail) {
-      sound.playError();
-      setErrorMsg('Please enter your name and email to receive the digital pass.');
+      setErrorMsg('Please enter your name and email to receive the ticket.');
       return;
     }
 
     try {
       setProcessing(true);
       setErrorMsg('');
-      sound.playClick();
 
       const bookingPayload = {
         movieId: movie.id,
         movieTitle: movie.title,
         showtimeId: showtime.id,
-        showType,
-        format,
+        showType: '2D',
+        format: showtime.format || 'Standard',
         date: showtime.date,
         time: showtime.time,
         hall: showtime.hall,
         seats,
-        seatTiers: seatObjects.map(s => s.tier),
+        seatTiers: seatObjects?.map(s => s.tier) || ['Classic'],
         ticketAmount: subtotal,
-        glassesCount,
-        glassesAmount,
+        glassesCount: 0,
+        glassesAmount: 0,
         snacks,
         snacksAmount: snacksSubtotal,
         discount: promoDiscount,
@@ -103,28 +85,22 @@ export default function CheckoutModal({
 
       const result = await api.createBooking(bookingPayload);
 
-      // Play victory fanfare sound
-      try { sound.playFanfare(); } catch(e) {}
-
-      // Launch golden & cyan confetti!
       try {
         confetti({
-          particleCount: 120,
-          spread: 80,
-          origin: { y: 0.6 },
-          colors: ['#00f5ff', '#8b5cf6', '#f59e0b', '#10b981']
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 }
         });
       } catch (e) {}
 
       const finalBooking = result?.booking || (result?.id ? result : null) || {
         ...bookingPayload,
-        id: `CV-${Math.floor(10000 + Math.random() * 90000)}`,
+        id: `CP-${Math.floor(10000 + Math.random() * 90000)}`,
         status: 'Confirmed'
       };
 
       onSuccess(finalBooking);
     } catch (err) {
-      sound.playError();
       console.error(err);
       setErrorMsg(err.message || 'Payment processing failed.');
     } finally {
@@ -133,51 +109,48 @@ export default function CheckoutModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-xl animate-fade-in overflow-y-auto">
-      <div className="relative w-full max-w-2xl rounded-3xl border border-cyan-500/30 bg-[#0b0f19] p-6 md:p-8 shadow-2xl shadow-cyan-950/60 my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in overflow-y-auto">
+      <div className="relative w-full max-w-xl rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 shadow-2xl my-8">
         {/* Close Button */}
         <button
-          onClick={() => {
-            sound.playClick();
-            onClose();
-          }}
-          className="absolute top-5 right-5 p-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all"
+          onClick={onClose}
+          className="absolute top-5 right-5 p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-900 transition-all cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono tracking-wider uppercase mb-1">
+        <div className="mb-5">
+          <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-semibold uppercase mb-1">
             <ShieldCheck className="w-4 h-4" />
-            <span>256-Bit Encrypted High-Speed Checkout</span>
+            <span>Secure Checkout</span>
           </div>
-          <h2 className="text-2xl font-black text-white tracking-tight">Confirm & Book Tickets</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Confirm & Book Tickets</h2>
         </div>
 
         {errorMsg && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+          <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs">
             {errorMsg}
           </div>
         )}
 
         {/* Order Summary Card */}
-        <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 mb-6">
+        <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 mb-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="font-bold text-white text-base">{movie.title}</h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {showtime.hall} • {showtime.experience}
+              <h3 className="font-bold text-gray-900 text-sm sm:text-base">{movie.title}</h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {showtime.hall} • {showtime.experience || showtime.sound || 'Dolby Atmos'}
               </p>
-              <p className="text-xs text-cyan-400 font-mono mt-1">
+              <p className="text-xs text-rose-600 font-semibold mt-1">
                 📅 {showtime.date} at {showtime.time}
               </p>
             </div>
             <div className="text-right">
-              <span className="text-xs text-slate-400">Seats:</span>
-              <div className="flex items-center gap-1 mt-0.5 justify-end">
+              <span className="text-xs text-gray-500">Seats:</span>
+              <div className="flex flex-wrap items-center gap-1 mt-0.5 justify-end">
                 {seats.map(s => (
-                  <span key={s} className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono font-bold text-xs">
+                  <span key={s} className="px-2 py-0.5 rounded bg-rose-100 text-rose-700 font-mono font-bold text-xs">
                     {s}
                   </span>
                 ))}
@@ -186,41 +159,35 @@ export default function CheckoutModal({
           </div>
 
           {/* Price Breakdown */}
-          <div className="mt-4 pt-3 border-t border-white/10 flex flex-col gap-1.5 text-xs text-slate-300">
+          <div className="mt-4 pt-3 border-t border-gray-200 flex flex-col gap-1.5 text-xs text-gray-600">
             <div className="flex justify-between">
               <span>Ticket Subtotal ({seats.length} seats)</span>
-              <span className="font-mono text-white">₹{subtotal.toLocaleString()}</span>
+              <span className="font-mono text-gray-900 font-semibold">₹{subtotal.toLocaleString()}</span>
             </div>
-            {glassesAmount > 0 && (
-              <div className="flex justify-between text-cyan-300">
-                <span>Sanitized 3D Glasses ({glassesCount}x ₹30)</span>
-                <span className="font-mono">₹{glassesAmount.toLocaleString()}</span>
-              </div>
-            )}
             {snacksSubtotal > 0 && (
               <div className="flex justify-between">
-                <span>Gourmet Concessions ({snacks.length} items)</span>
-                <span className="font-mono text-amber-300">₹{snacksSubtotal.toLocaleString()}</span>
+                <span>Concessions ({snacks.length} items)</span>
+                <span className="font-mono text-amber-600 font-semibold">₹{snacksSubtotal.toLocaleString()}</span>
               </div>
             )}
             {promoDiscount > 0 && (
-              <div className="flex justify-between text-emerald-400 font-semibold">
+              <div className="flex justify-between text-emerald-600 font-semibold">
                 <span>Promo Discount ({appliedPromo})</span>
                 <span className="font-mono">-₹{promoDiscount.toLocaleString()}</span>
               </div>
             )}
-            <div className="pt-2 border-t border-white/10 flex justify-between text-sm font-bold text-white">
+            <div className="pt-2 border-t border-gray-200 flex justify-between text-sm font-bold text-gray-900">
               <span>Total Payable Amount</span>
-              <span className="text-lg font-black text-cyan-400 font-mono">₹{netTotal.toLocaleString()}</span>
+              <span className="text-lg font-bold text-rose-600 font-mono">₹{netTotal.toLocaleString()}</span>
             </div>
           </div>
         </div>
 
         {/* Promo Code Box */}
-        <div className="mb-6">
-          <label className="block text-xs font-semibold text-slate-300 mb-2 flex items-center gap-1.5">
-            <Tag className="w-3.5 h-3.5 text-amber-400" />
-            <span>Have a Promo Code? (Try: CINE50, BLOCKBUSTER, VIPFREE)</span>
+        <div className="mb-5">
+          <label className="block text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+            <Tag className="w-3.5 h-3.5 text-amber-500" />
+            <span>Have a Promo Code? (Use: CINE50, BLOCKBUSTER)</span>
           </label>
           <div className="flex gap-2">
             <input
@@ -228,42 +195,42 @@ export default function CheckoutModal({
               value={promoCodeInput}
               onChange={e => setPromoCodeInput(e.target.value)}
               placeholder="e.g. CINE50"
-              className="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-white text-xs font-mono uppercase focus:border-cyan-500 focus:outline-none"
+              className="flex-1 px-3.5 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 text-xs font-mono uppercase focus:border-rose-500 focus:outline-none"
             />
             <button
               type="button"
               onClick={handleApplyPromo}
-              className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-cyan-500 hover:text-black text-slate-200 text-xs font-bold transition-all border border-white/10"
+              className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold transition-all border border-gray-300 cursor-pointer"
             >
               Apply
             </button>
           </div>
           {promoMsg && (
-            <p className={`text-xs mt-1.5 ${promoDiscount > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <p className={`text-xs mt-1.5 ${promoDiscount > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
               {promoMsg}
             </p>
           )}
         </div>
 
         {/* Customer Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-5">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Your Full Name</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Your Full Name</label>
             <input
               type="text"
               value={customerName}
               onChange={e => setCustomerName(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-white text-xs focus:border-cyan-500 focus:outline-none"
-              placeholder="John Doe"
+              className="w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 text-xs focus:border-rose-500 focus:outline-none"
+              placeholder="Full Name"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Email (Ticket sent here)</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Email Address</label>
             <input
               type="email"
               value={customerEmail}
               onChange={e => setCustomerEmail(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-white text-xs focus:border-cyan-500 focus:outline-none"
+              className="w-full px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-900 text-xs focus:border-rose-500 focus:outline-none"
               placeholder="name@email.com"
             />
           </div>
@@ -271,66 +238,60 @@ export default function CheckoutModal({
 
         {/* Payment Methods */}
         <div className="mb-6">
-          <label className="block text-xs font-medium text-slate-400 mb-2">Select Payment Method</label>
+          <label className="block text-xs font-medium text-gray-600 mb-2">Select Payment Method</label>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() => {
-                sound.playClick();
-                setPaymentMethod('upi');
-              }}
-              className={`p-3.5 rounded-2xl border text-left flex items-center gap-3 transition-all ${
+              onClick={() => setPaymentMethod('upi')}
+              className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
                 paymentMethod === 'upi'
-                  ? 'bg-cyan-500/10 border-cyan-400 text-white shadow-lg shadow-cyan-950/40'
-                  : 'bg-white/[0.02] border-white/10 text-slate-400 hover:text-white'
+                  ? 'bg-rose-50 border-rose-500 text-gray-900 shadow-xs'
+                  : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
               }`}
             >
-              <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
-                <QrCode className="w-5 h-5" />
+              <div className="p-2 rounded-lg bg-rose-100 text-rose-600">
+                <QrCode className="w-4 h-4" />
               </div>
               <div>
-                <div className="font-bold text-xs">Instant UPI / QR</div>
-                <div className="text-[10px] text-slate-400">GPay, PhonePe, Paytm</div>
+                <div className="font-bold text-xs text-gray-900">UPI / QR</div>
+                <div className="text-[10px] text-gray-500">GPay, PhonePe, Paytm</div>
               </div>
             </button>
 
             <button
               type="button"
-              onClick={() => {
-                sound.playClick();
-                setPaymentMethod('card');
-              }}
-              className={`p-3.5 rounded-2xl border text-left flex items-center gap-3 transition-all ${
+              onClick={() => setPaymentMethod('card')}
+              className={`p-3 rounded-xl border text-left flex items-center gap-3 transition-all cursor-pointer ${
                 paymentMethod === 'card'
-                  ? 'bg-purple-500/10 border-purple-400 text-white shadow-lg shadow-purple-950/40'
-                  : 'bg-white/[0.02] border-white/10 text-slate-400 hover:text-white'
+                  ? 'bg-rose-50 border-rose-500 text-gray-900 shadow-xs'
+                  : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
               }`}
             >
-              <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400">
-                <CreditCard className="w-5 h-5" />
+              <div className="p-2 rounded-lg bg-blue-100 text-blue-600">
+                <CreditCard className="w-4 h-4" />
               </div>
               <div>
-                <div className="font-bold text-xs">Debit / Credit Card</div>
-                <div className="text-[10px] text-slate-400">Visa, Mastercard, RuPay</div>
+                <div className="font-bold text-xs text-gray-900">Card</div>
+                <div className="text-[10px] text-gray-500">Debit / Credit Card</div>
               </div>
             </button>
           </div>
         </div>
 
-        {/* Simulated Payment Trigger */}
+        {/* Payment Button */}
         <button
           onClick={handlePay}
           disabled={processing}
-          className="w-full py-4 rounded-2xl font-bold text-sm bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 text-black shadow-xl shadow-cyan-500/40 hover:shadow-cyan-400/60 hover:scale-[1.01] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+          className="w-full py-3.5 rounded-xl font-bold text-sm bg-rose-600 hover:bg-rose-700 text-white shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
         >
           {processing ? (
             <>
-              <div className="w-5 h-5 rounded-full border-2 border-black border-t-transparent animate-spin" />
-              <span>Verifying High-Speed Payment Matrix...</span>
+              <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+              <span>Processing Payment...</span>
             </>
           ) : (
             <>
-              <span>Authorize & Pay ₹{netTotal.toLocaleString()}</span>
+              <span>Pay ₹{netTotal.toLocaleString()} & Book Tickets</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}

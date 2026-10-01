@@ -1,11 +1,8 @@
-import React, { useState } from 'react';
-import { sound } from '../../services/soundEngine';
-import { X, Film, ExternalLink, Play, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import React from 'react';
+import { X, Film, ExternalLink, Play } from 'lucide-react';
 
 export default function TrailerModal({ movie, onClose }) {
   if (!movie) return null;
-
-  const [hasError, setHasError] = useState(false);
 
   // Extract clean video ID
   let videoId = '';
@@ -17,25 +14,25 @@ export default function TrailerModal({ movie, onClose }) {
     videoId = movie.trailerUrl.split('youtu.be/')[1]?.split('?')[0];
   }
 
-  // High-performance clean embed URL
+  // Clean embed URL
   const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
   const directWatchUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-2xl animate-fade-in">
-      <div className="relative w-full max-w-4xl bg-slate-950 rounded-3xl border border-cyan-500/40 overflow-hidden shadow-2xl shadow-cyan-950/80">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fade-in">
+      <div className="relative w-full max-w-4xl bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-white/10 bg-slate-900/80">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
+            <div className="p-2 rounded-lg bg-rose-100 text-rose-600">
               <Film className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-black text-white text-base leading-tight">
+              <h3 className="font-bold text-gray-900 text-base leading-tight">
                 {movie.title} — Official Trailer
               </h3>
-              <p className="text-[11px] text-slate-400 font-mono mt-0.5">
-                {movie.formats?.join(' • ')} {movie.tamilTitle ? `• ${movie.tamilTitle}` : ''}
+              <p className="text-xs text-gray-500 mt-0.5">
+                {movie.language} {movie.tamilTitle ? `• ${movie.tamilTitle}` : ''}
               </p>
             </div>
           </div>
@@ -45,38 +42,21 @@ export default function TrailerModal({ movie, onClose }) {
               href={directWatchUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-red-500 hover:from-red-500 hover:to-rose-500 text-white transition-all text-xs font-black shadow-lg shadow-red-600/30"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-all text-xs font-semibold shadow-xs"
               title="Open in Official YouTube Player"
             >
               <Play className="w-3.5 h-3.5 fill-white" />
-              <span>Watch in 4K on YouTube</span>
+              <span>Watch on YouTube</span>
               <ExternalLink className="w-3 h-3 ml-0.5" />
             </a>
 
             <button
-              onClick={() => {
-                sound.playClick();
-                onClose();
-              }}
-              className="p-2 rounded-xl bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white transition-all border border-white/10 cursor-pointer"
+              onClick={onClose}
+              className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-600 transition-all cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
-        </div>
-
-        {/* Studio Stream Status Ribbon */}
-        <div className="bg-cyan-950/30 border-b border-cyan-500/30 px-4 py-2 flex items-center justify-between text-xs text-cyan-200">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0 animate-pulse" />
-            <span>
-              <strong className="text-white">Official Theatrical Trailer</strong> • Verified High-Definition Dolby Audio Master Stream
-            </span>
-          </div>
-          <span className="text-[11px] text-emerald-400 font-mono font-bold flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            LIVE PLAYBACK ACTIVE
-          </span>
         </div>
 
         {/* Video Player Area */}
@@ -88,27 +68,16 @@ export default function TrailerModal({ movie, onClose }) {
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             allowFullScreen
           />
-
-          {/* Fallback Overlay if user prefers direct streaming */}
-          <div className="absolute inset-0 bg-cover bg-center -z-0 opacity-30" style={{ backgroundImage: `url(${movie.bannerUrl})` }} />
         </div>
 
         {/* Footer info bar */}
-        <div className="p-4 bg-slate-900/60 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <div className="text-slate-400">
-            Starring: <span className="text-white font-medium">{movie.cast?.join(', ')}</span> • Directed by <span className="text-cyan-300 font-medium">{movie.director}</span>
+        <div className="p-3.5 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-600">
+          <div>
+            Starring: <span className="text-gray-900 font-medium">{movie.cast?.join(', ')}</span> • Directed by <span className="text-gray-900 font-medium">{movie.director}</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <a
-              href={directWatchUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500 hover:text-black text-cyan-300 font-bold text-xs flex items-center gap-1.5 transition-all border border-cyan-500/30"
-            >
-              <span>Open on YouTube App</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+          <div className="text-gray-500 text-[11px]">
+            Academic Cinema Booking Project
           </div>
         </div>
       </div>

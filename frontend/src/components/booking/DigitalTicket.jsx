@@ -413,14 +413,14 @@ export default function DigitalTicket({
   };
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-8">
+    <div className="max-w-xl mx-auto px-4 py-8 text-gray-900">
       {/* Confirmation Success Header */}
       <div className="text-center mb-6">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 mb-3">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 mb-3 shadow-xs">
           <CheckCircle2 className="w-7 h-7" />
         </div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Booking Confirmed!</h1>
-        <p className="text-xs text-slate-400 mt-1">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Booking Confirmed!</h1>
+        <p className="text-xs text-gray-500 mt-1">
           Your movie tickets have been reserved successfully.
         </p>
       </div>
@@ -549,7 +549,7 @@ export default function DigitalTicket({
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <button
           onClick={handlePrint}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition-all border border-slate-700 cursor-pointer shadow-sm"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gray-900 hover:bg-black text-white font-semibold text-xs transition-all cursor-pointer shadow-xs"
         >
           <Printer className="w-4 h-4 text-rose-400" />
           <span>Print E-Ticket (PDF)</span>
@@ -558,7 +558,7 @@ export default function DigitalTicket({
         <button
           onClick={handleDownloadImage}
           disabled={downloading}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-semibold text-xs transition-all shadow-md shadow-rose-500/20 cursor-pointer"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition-all shadow-xs cursor-pointer"
         >
           {downloadSuccess ? (
             <>
@@ -574,11 +574,8 @@ export default function DigitalTicket({
         </button>
 
         <button
-          onClick={() => {
-            sound.playClick();
-            onDone();
-          }}
-          className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-semibold text-xs transition-all border border-slate-800 cursor-pointer"
+          onClick={onDone}
+          className="px-5 py-2.5 rounded-xl bg-white hover:bg-gray-50 text-gray-700 font-semibold text-xs transition-all border border-gray-300 cursor-pointer shadow-xs"
         >
           Book Another Movie
         </button>
