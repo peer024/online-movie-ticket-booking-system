@@ -120,50 +120,50 @@ export const api = {
     const showtimes = getLocal('showtimes', initialDb.showtimes);
     const showtime = showtimes.find(s => s.id === showtimeId) || showtimes[0] || {
       id: showtimeId || 'st-default',
-      priceTiers: { vip: 250, executive: 190, classic: 150 },
-      bookedSeats: ['F03', 'F04', 'N11', 'N12']
+      priceTiers: { executive: 190, classic: 150 },
+      bookedSeats: []
     };
 
-    const rows = [
-      { row: 'A', tier: 'VIP', price: showtime.priceTiers?.vip || 480, totalCols: 8 },
-      { row: 'B', tier: 'VIP', price: showtime.priceTiers?.vip || 480, totalCols: 8 },
-      { row: 'C', tier: 'Executive', price: showtime.priceTiers?.executive || 340, totalCols: 10 },
-      { row: 'D', tier: 'Executive', price: showtime.priceTiers?.executive || 340, totalCols: 10 },
-      { row: 'E', tier: 'Executive', price: showtime.priceTiers?.executive || 340, totalCols: 10 },
-      { row: 'F', tier: 'Classic', price: showtime.priceTiers?.classic || 220, totalCols: 10 },
-      { row: 'G', tier: 'Classic', price: showtime.priceTiers?.classic || 220, totalCols: 10 },
-      { row: 'H', tier: 'Classic', price: showtime.priceTiers?.classic || 220, totalCols: 10 }
-    ];
+    // Load persisted booked seats from localStorage
+    let localBooked = [];
+    try {
+      localBooked = JSON.parse(localStorage.getItem(`bookedSeats_${showtimeId}`) || '[]');
+    } catch (e) {}
+    const booked = new Set([...(showtime.bookedSeats || []), ...localBooked]);
 
-    const booked = new Set(showtime.bookedSeats || ['A3', 'A4', 'C5', 'C6']);
+    const premiumRows = ['F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
+    const goldRows = ['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y'];
     const seats = [];
 
-    rows.forEach((r, rIdx) => {
-      for (let c = 1; c <= r.totalCols; c++) {
-        const seatCode = `${r.row}${c}`;
+    const createRow = (rowLetter, tierName, price) => {
+      for (let c = 1; c <= 24; c++) {
+        const numStr = c < 10 ? `0${c}` : `${c}`;
+        const seatCode = `${rowLetter}${numStr}`;
         seats.push({
           id: seatCode,
-          row: r.row,
-          number: c,
-          tier: r.tier,
-          price: r.price,
+          row: rowLetter,
+          number: numStr,
+          tier: tierName,
+          price: price,
           isBooked: booked.has(seatCode),
-          rowIndex: rIdx,
-          colIndex: c - 1
+          block: c <= 6 ? 'left' : c <= 18 ? 'center' : 'right'
         });
       }
-    });
+    };
+
+    premiumRows.forEach(r => createRow(r, 'PREMIUM', showtime.priceTiers?.executive || 190));
+    goldRows.forEach(r => createRow(r, 'GOLD', showtime.priceTiers?.classic || 150));
 
     return {
       showtimeId: showtime.id,
-      experience: showtime.experience || 'IMAX 3D Laser',
-      format: showtime.format || 'IMAX 3D Laser',
-      glassesFee: showtime.glassesFee !== undefined ? showtime.glassesFee : 30,
+      experience: showtime.sound || 'RAM - RGB ATMOS',
+      format: showtime.format || 'RAM - RGB ATMOS',
+      bookedSeats: Array.from(booked),
       seats,
       summary: {
         total: seats.length,
         available: seats.filter(s => !s.isBooked).length,
-        booked: booked.size
+        booked: seats.filter(s => s.isBooked).length
       }
     };
   },
@@ -205,6 +205,24 @@ export const api = {
 
   // Bookings
   async createBooking(bookingData) {
+    // Always persist booked seats to localStorage immediately
+    if (bookingData.showtimeId && Array.isArray(bookingData.seats)) {
+      try {
+        const key = `bookedSeats_${bookingData.showtimeId}`;
+        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        const updated = Array.from(new Set([...existing, ...bookingData.seats]));
+        localStorage.setItem(key, JSON.stringify(updated));
+
+        // Also update showtimes in localStorage
+        const showtimes = getLocal('showtimes', initialDb.showtimes);
+        let st = showtimes.find(s => s.id === bookingData.showtimeId);
+        if (st) {
+          st.bookedSeats = Array.from(new Set([...(st.bookedSeats || []), ...bookingData.seats]));
+          setLocal('showtimes', showtimes);
+        }
+      } catch (e) {}
+    }
+
     try {
       const res = await fetch(`${API_BASE}/bookings`, {
         method: 'POST',
@@ -227,15 +245,6 @@ export const api = {
     bookings.unshift(confirmed);
     setLocal('bookings', bookings);
 
-    // Update booked seats locally
-    if (bookingData.showtimeId && bookingData.seats) {
-      const showtimes = getLocal('showtimes', initialDb.showtimes);
-      const st = showtimes.find(s => s.id === bookingData.showtimeId);
-      if (st) {
-        st.bookedSeats = [...(st.bookedSeats || []), ...bookingData.seats];
-        setLocal('showtimes', showtimes);
-      }
-    }
     return {
       success: true,
       booking: confirmed,

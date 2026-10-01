@@ -9,10 +9,16 @@ function generateAuthenticTheaterSeats(showtime) {
   const premiumRows = ['F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
   const goldRows = ['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y'];
 
-  const booked = new Set(showtime?.bookedSeats || [
+  let localBooked = [];
+  try {
+    localBooked = JSON.parse(localStorage.getItem(`bookedSeats_${showtime?.id}`) || '[]');
+  } catch (e) {}
+
+  const initialBooked = showtime?.bookedSeats || [
     'F03', 'F04', 'G11', 'G12', 'H05', 'H06', 'J14', 'J15',
     'N11', 'N12', 'N13', 'O08', 'O09', 'R15', 'R16', 'T04', 'T05'
-  ]);
+  ];
+  const booked = new Set([...initialBooked, ...localBooked]);
 
   const seats = [];
 
@@ -52,10 +58,38 @@ export default function SeatSelector({
   const premiumRows = ['F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
   const goldRows = ['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y'];
 
+  // Real-time synchronization of booked seats from API + localStorage
+  useEffect(() => {
+    let isMounted = true;
+    async function syncSeats() {
+      if (!showtime?.id) return;
+      try {
+        const res = await api.getShowtimeSeats(showtime.id);
+        if (res && Array.isArray(res.bookedSeats) && isMounted) {
+          let localBooked = [];
+          try {
+            localBooked = JSON.parse(localStorage.getItem(`bookedSeats_${showtime.id}`) || '[]');
+          } catch (e) {}
+          const allBooked = new Set([...res.bookedSeats, ...localBooked]);
+          setSeatsData(prev => prev.map(s => ({
+            ...s,
+            isBooked: allBooked.has(s.id)
+          })));
+        }
+      } catch (e) {}
+    }
+    syncSeats();
+    return () => { isMounted = false; };
+  }, [showtime?.id]);
+
   const toggleSeat = (seatId) => {
     setErrorMsg('');
     const target = seatsData.find(s => s.id === seatId);
-    if (!target || target.isBooked) return;
+    if (!target) return;
+    if (target.isBooked) {
+      setErrorMsg(`Seat ${seatId} is already booked by another customer. Please choose an available seat.`);
+      return;
+    }
 
     if (selectedSeats.includes(seatId)) {
       setSelectedSeats(prev => prev.filter(s => s !== seatId));
@@ -99,16 +133,15 @@ export default function SeatSelector({
           return (
             <button
               key={seat.id}
-              disabled={seat.isBooked}
               onClick={() => toggleSeat(seat.id)}
-              className={`w-6 h-6 sm:w-7 sm:h-7 rounded-[4px] text-[10px] sm:text-[11px] font-mono transition-all flex items-center justify-center cursor-pointer ${
+              className={`w-6 h-6 sm:w-7 sm:h-7 rounded-[4px] text-[10px] sm:text-[11px] font-mono transition-all flex items-center justify-center ${
                 seat.isBooked
-                  ? 'bg-gray-100 text-gray-300 border border-gray-200 cursor-not-allowed'
+                  ? 'bg-rose-600 text-white font-bold border border-rose-700 cursor-not-allowed shadow-2xs opacity-90'
                   : isSelected
-                  ? 'bg-emerald-600 text-white font-bold border border-emerald-600 shadow-xs'
-                  : 'bg-white text-emerald-700 border border-emerald-500 hover:bg-emerald-50'
+                  ? 'bg-emerald-600 text-white font-bold border border-emerald-600 shadow-xs cursor-pointer'
+                  : 'bg-white text-emerald-700 border border-emerald-500 hover:bg-emerald-50 cursor-pointer'
               }`}
-              title={`${seat.id} - ${seat.tier} (₹${seat.price})`}
+              title={`${seat.id} - ${seat.tier} (₹${seat.price}) - ${seat.isBooked ? 'Already Booked' : 'Available'}`}
             >
               {seat.number}
             </button>
@@ -177,12 +210,12 @@ export default function SeatSelector({
             <span className="text-gray-600 text-[11px]">Available</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3.5 h-3.5 rounded-[3px] bg-emerald-600 border border-emerald-600" />
+            <div className="w-3.5 h-3.5 rounded-[3px] bg-emerald-600 border border-emerald-600 shadow-2xs" />
             <span className="text-emerald-700 font-bold text-[11px]">Selected</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3.5 h-3.5 rounded-[3px] bg-gray-100 border border-gray-200" />
-            <span className="text-gray-400 text-[11px]">Sold</span>
+            <div className="w-3.5 h-3.5 rounded-[3px] bg-rose-600 border border-rose-700 shadow-2xs" />
+            <span className="text-rose-600 font-bold text-[11px]">Already Booked</span>
           </div>
         </div>
       </div>

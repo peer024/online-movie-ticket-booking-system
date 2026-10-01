@@ -123,51 +123,57 @@ app.get('/api/showtimes/:id', (req, res) => {
   res.json(showtime);
 });
 
-// Seat layout generator for the 3D Auditorium
-// Rows: A-B (VIP Recliners), C-E (Executive), F-H (Classic)
-// Columns: 1 to 10
+// Seat layout generator matching TicketNew / Ram Muthuram Cinemas layout
+// Rows F to M: Premium (190), Rows N to Y: Gold (150)
+// Columns: 1 to 24 split into Left (1-6), Center (7-18), Right (19-24)
 app.get('/api/showtimes/:id/seats', (req, res) => {
   const db = readDb();
-  const showtime = db.showtimes.find(s => s.id === req.params.id);
-  if (!showtime) return res.status(404).json({ error: 'Showtime not found' });
+  let showtime = db.showtimes.find(s => s.id === req.params.id);
+  if (!showtime) {
+    showtime = {
+      id: req.params.id,
+      hall: 'Audi 1',
+      experience: 'RAM - RGB ATMOS',
+      priceTiers: { executive: 190, classic: 150 },
+      bookedSeats: []
+    };
+  }
 
-  const rows = [
-    { row: 'A', tier: 'VIP', price: showtime.priceTiers?.vip || 450, totalCols: 8 },
-    { row: 'B', tier: 'VIP', price: showtime.priceTiers?.vip || 450, totalCols: 8 },
-    { row: 'C', tier: 'Executive', price: showtime.priceTiers?.executive || 190, totalCols: 10 },
-    { row: 'D', tier: 'Executive', price: showtime.priceTiers?.executive || 190, totalCols: 10 },
-    { row: 'E', tier: 'Executive', price: showtime.priceTiers?.executive || 190, totalCols: 10 },
-    { row: 'F', tier: 'Classic', price: showtime.priceTiers?.classic || 150, totalCols: 10 },
-    { row: 'G', tier: 'Classic', price: showtime.priceTiers?.classic || 150, totalCols: 10 },
-    { row: 'H', tier: 'Classic', price: showtime.priceTiers?.classic || 150, totalCols: 10 }
-  ];
-
+  const premiumRows = ['F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
+  const goldRows = ['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y'];
   const booked = new Set(showtime.bookedSeats || []);
   const seats = [];
 
-  rows.forEach((r, rIdx) => {
-    for (let c = 1; c <= r.totalCols; c++) {
-      const seatCode = `${r.row}${c}`;
+  const createRow = (rowLetter, tierName, price) => {
+    for (let c = 1; c <= 24; c++) {
+      const numStr = c < 10 ? `0${c}` : `${c}`;
+      const seatCode = `${rowLetter}${numStr}`;
       seats.push({
         id: seatCode,
-        row: r.row,
-        number: c,
-        tier: r.tier,
-        price: r.price,
+        row: rowLetter,
+        number: numStr,
+        tier: tierName,
+        price: price,
         isBooked: booked.has(seatCode),
-        rowIndex: rIdx,
-        colIndex: c - 1
+        block: c <= 6 ? 'left' : c <= 18 ? 'center' : 'right'
       });
     }
-  });
+  };
+
+  premiumRows.forEach(r => createRow(r, 'PREMIUM', showtime.priceTiers?.executive || 190));
+  goldRows.forEach(r => createRow(r, 'GOLD', showtime.priceTiers?.classic || 150));
 
   res.json({
     showtimeId: showtime.id,
-    hall: showtime.hall,
-    experience: showtime.experience,
-    bookedSeats: showtime.bookedSeats,
-    rows,
-    seats
+    hall: showtime.hall || 'Audi 1',
+    experience: showtime.sound || 'RAM - RGB ATMOS',
+    bookedSeats: Array.from(booked),
+    seats,
+    summary: {
+      total: seats.length,
+      available: seats.filter(s => !s.isBooked).length,
+      booked: seats.filter(s => s.isBooked).length
+    }
   });
 });
 
@@ -254,10 +260,22 @@ app.post('/api/bookings', (req, res) => {
   }
 
   // Check showtime and ensure seats are not already booked
-  const showtime = db.showtimes.find(s => s.id === showtimeId);
+  let showtime = db.showtimes.find(s => s.id === showtimeId);
   if (!showtime) {
-    return res.status(404).json({ error: 'Showtime not found' });
+    showtime = {
+      id: showtimeId,
+      movieId: movieId || 'mov-feature',
+      date: date || 'Today',
+      time: time || '11:30 AM',
+      hall: hall || 'Audi 1',
+      sound: 'RAM - RGB ATMOS',
+      priceTiers: { executive: 190, classic: 150 },
+      bookedSeats: []
+    };
+    db.showtimes.push(showtime);
   }
+
+  if (!showtime.bookedSeats) showtime.bookedSeats = [];
 
   const alreadyBooked = seats.filter(s => showtime.bookedSeats.includes(s));
   if (alreadyBooked.length > 0) {
@@ -266,8 +284,9 @@ app.post('/api/bookings', (req, res) => {
     });
   }
 
-  // Lock seats
-  showtime.bookedSeats.push(...seats);
+  // Lock seats into showtime
+  showtime.bookedSeats = Array.from(new Set([...showtime.bookedSeats, ...seats]));
+  writeDb(db);
 
   const bookingId = `CV-${Math.floor(10000 + Math.random() * 90000)}`;
   const newBooking = {

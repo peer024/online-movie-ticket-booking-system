@@ -483,7 +483,7 @@ export default function AdminDashboard({ onExitAdmin, onLogout }) {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
             <div>
               <h2 className="text-lg font-bold text-white">Live Screen Occupancy Matrix</h2>
-              <p className="text-xs text-slate-400">Real-time status of booked vs available seats in the auditorium</p>
+              <p className="text-xs text-slate-400">Authentic theater auditorium layout showing real-time booked vs available seats</p>
             </div>
 
             {/* Select Showtime to Inspect */}
@@ -496,55 +496,141 @@ export default function AdminDashboard({ onExitAdmin, onLogout }) {
                 const m = movies.find(mov => mov.id === st.movieId);
                 return (
                   <option key={st.id} value={st.id}>
-                    {m?.title || 'Film'} ({st.hall} - {st.date} {st.time})
+                    {m?.title || 'Film'} ({st.hall || 'Audi 1'} - {st.date} {st.time})
                   </option>
                 );
               })}
             </select>
           </div>
 
-          {/* Matrix Grid */}
-          <div className="p-6 rounded-2xl bg-black/60 border border-white/5">
-            <div className="text-center mb-6">
-              <div className="w-1/2 h-1.5 mx-auto bg-cyan-400/80 rounded-full shadow-[0_0_15px_rgba(0,245,255,0.7)]" />
-              <div className="text-[10px] font-mono text-cyan-400 tracking-widest mt-1">SCREEN DIRECTION</div>
+          {/* Occupancy Stats Summary */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-white/5">
+              <div className="text-[10px] text-slate-400 uppercase font-semibold">Total Capacity</div>
+              <div className="text-lg font-bold text-white mt-0.5">{matrixSeats.length || 480} Seats</div>
             </div>
+            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-emerald-500/20">
+              <div className="text-[10px] text-emerald-400 uppercase font-semibold">Available</div>
+              <div className="text-lg font-bold text-emerald-400 mt-0.5">{matrixSeats.filter(s => !s.isBooked).length}</div>
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-rose-500/20">
+              <div className="text-[10px] text-rose-400 uppercase font-semibold">Booked / Occupied</div>
+              <div className="text-lg font-bold text-rose-400 mt-0.5">{matrixSeats.filter(s => s.isBooked).length}</div>
+            </div>
+            <div className="p-3.5 rounded-xl bg-slate-950/60 border border-cyan-500/20">
+              <div className="text-[10px] text-cyan-400 uppercase font-semibold">Occupancy Rate</div>
+              <div className="text-lg font-bold text-cyan-400 mt-0.5">
+                {matrixSeats.length > 0 ? Math.round((matrixSeats.filter(s => s.isBooked).length / matrixSeats.length) * 100) : 0}%
+              </div>
+            </div>
+          </div>
 
-            <div className="flex flex-col gap-2 items-center max-w-2xl mx-auto">
-              {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(rowLabel => {
+          {/* Matrix Grid */}
+          <div className="p-6 rounded-2xl bg-black/60 border border-white/5 overflow-x-auto">
+            {/* Top Tier: Premium (Rows F to M) */}
+            <div className="text-center text-xs font-bold text-slate-400 uppercase tracking-widest my-3 py-1.5 border-b border-white/10 flex items-center justify-center gap-2">
+              <span>₹190 PREMIUM (balcony / rear)</span>
+            </div>
+            <div className="flex flex-col gap-1.5 items-center min-w-[700px] mx-auto py-2">
+              {['F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'].map(rowLabel => {
                 const rSeats = matrixSeats.filter(s => s.row === rowLabel);
+                const left = rSeats.filter(s => s.block === 'left');
+                const center = rSeats.filter(s => s.block === 'center');
+                const right = rSeats.filter(s => s.block === 'right');
+
+                const renderBlock = (blockSeats) => (
+                  <div className="flex items-center gap-1 sm:gap-1.5">
+                    {blockSeats.map(seat => (
+                      <div
+                        key={seat.id}
+                        className={`w-6 h-6 sm:w-7 sm:h-7 rounded text-[10px] font-mono font-bold flex items-center justify-center border transition-all ${
+                          seat.isBooked
+                            ? 'bg-rose-600 border-rose-500 text-white shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+                            : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300 hover:border-emerald-400'
+                        }`}
+                        title={`${seat.id} (${seat.tier}) - ${seat.isBooked ? 'Booked' : 'Available'}`}
+                      >
+                        {seat.number}
+                      </div>
+                    ))}
+                  </div>
+                );
+
                 return (
-                  <div key={rowLabel} className="flex items-center gap-2">
-                    <span className="w-5 font-mono text-xs font-bold text-slate-500 text-right">{rowLabel}</span>
-                    <div className="flex items-center gap-1.5">
-                      {rSeats.map(seat => (
-                        <div
-                          key={seat.id}
-                          className={`w-7 h-7 rounded text-[10px] font-mono font-bold flex items-center justify-center border ${
-                            seat.isBooked
-                              ? 'bg-rose-950/80 border-rose-500/60 text-rose-300'
-                              : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
-                          }`}
-                          title={`${seat.id} (${seat.tier}) - ${seat.isBooked ? 'Booked' : 'Available'}`}
-                        >
-                          {seat.number}
-                        </div>
-                      ))}
+                  <div key={rowLabel} className="flex items-center gap-2 sm:gap-4 my-0.5">
+                    <span className="w-5 font-mono text-xs font-bold text-slate-400 text-right">{rowLabel}</span>
+                    <div className="flex items-center gap-3 sm:gap-6">
+                      {renderBlock(left)}
+                      <div className="w-2 sm:w-4" />
+                      {renderBlock(center)}
+                      <div className="w-2 sm:w-4" />
+                      {renderBlock(right)}
                     </div>
-                    <span className="w-5 font-mono text-xs font-bold text-slate-500">{rowLabel}</span>
+                    <span className="w-5 font-mono text-xs font-bold text-slate-400">{rowLabel}</span>
+                  </div>
+                );
+              })}
+
+              {/* Lower Tier: Gold (Rows N to Y) */}
+              <div className="w-full text-center text-xs font-bold text-slate-400 uppercase tracking-widest mt-8 mb-3 py-1.5 border-b border-white/10 flex items-center justify-center gap-2">
+                <span>₹150 GOLD (front rows)</span>
+              </div>
+              {['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y'].map(rowLabel => {
+                const rSeats = matrixSeats.filter(s => s.row === rowLabel);
+                const left = rSeats.filter(s => s.block === 'left');
+                const center = rSeats.filter(s => s.block === 'center');
+                const right = rSeats.filter(s => s.block === 'right');
+
+                const renderBlock = (blockSeats) => (
+                  <div className="flex items-center gap-1 sm:gap-1.5">
+                    {blockSeats.map(seat => (
+                      <div
+                        key={seat.id}
+                        className={`w-6 h-6 sm:w-7 sm:h-7 rounded text-[10px] font-mono font-bold flex items-center justify-center border transition-all ${
+                          seat.isBooked
+                            ? 'bg-rose-600 border-rose-500 text-white shadow-[0_0_8px_rgba(244,63,94,0.5)]'
+                            : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300 hover:border-emerald-400'
+                        }`}
+                        title={`${seat.id} (${seat.tier}) - ${seat.isBooked ? 'Booked' : 'Available'}`}
+                      >
+                        {seat.number}
+                      </div>
+                    ))}
+                  </div>
+                );
+
+                return (
+                  <div key={rowLabel} className="flex items-center gap-2 sm:gap-4 my-0.5">
+                    <span className="w-5 font-mono text-xs font-bold text-slate-400 text-right">{rowLabel}</span>
+                    <div className="flex items-center gap-3 sm:gap-6">
+                      {renderBlock(left)}
+                      <div className="w-2 sm:w-4" />
+                      {renderBlock(center)}
+                      <div className="w-2 sm:w-4" />
+                      {renderBlock(right)}
+                    </div>
+                    <span className="w-5 font-mono text-xs font-bold text-slate-400">{rowLabel}</span>
                   </div>
                 );
               })}
             </div>
 
+            {/* Screen Direction at Bottom */}
+            <div className="w-full flex flex-col items-center mt-10 mb-4">
+              <div className="w-3/4 max-w-xl h-2 rounded-t-full bg-cyan-400/80 shadow-[0_0_15px_rgba(0,245,255,0.7)]" />
+              <div className="text-[11px] text-cyan-400 font-semibold tracking-wider uppercase mt-2.5">
+                All eyes this way please! Screen
+              </div>
+            </div>
+
             <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-white/10 text-xs">
               <div className="flex items-center gap-1.5">
-                <div className="w-3.5 h-3.5 rounded bg-emerald-950 border border-emerald-500" />
+                <div className="w-3.5 h-3.5 rounded bg-emerald-950/80 border border-emerald-500" />
                 <span className="text-emerald-300">Available</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="w-3.5 h-3.5 rounded bg-rose-950 border border-rose-500" />
-                <span className="text-rose-300">Booked / Occupied</span>
+                <div className="w-3.5 h-3.5 rounded bg-rose-600 border border-rose-500" />
+                <span className="text-rose-300 font-bold">Booked / Occupied</span>
               </div>
             </div>
           </div>

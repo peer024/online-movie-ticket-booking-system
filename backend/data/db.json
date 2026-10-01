@@ -1089,7 +1089,17 @@
       },
       "bookedSeats": [
         "A1",
-        "A2"
+        "A2",
+        "H10",
+        "H11",
+        "H12",
+        "H13",
+        "H14",
+        "H15",
+        "H16",
+        "H17",
+        "H18",
+        "H09"
       ]
     },
     {
@@ -1471,6 +1481,55 @@
     }
   ],
   "bookings": [
+    {
+      "id": "CV-54186",
+      "movieId": "mov-doctor",
+      "movieTitle": "Doctor",
+      "showtimeId": "st-doctor-2d-1",
+      "showType": "2D",
+      "format": "Dolby Atmos 2D",
+      "date": "Today",
+      "time": "03:45 PM",
+      "hall": "Screen 4 - Cyber Lounge 2D",
+      "seats": [
+        "H10",
+        "H11",
+        "H12",
+        "H13",
+        "H14",
+        "H15",
+        "H16",
+        "H17",
+        "H18",
+        "H09"
+      ],
+      "seatTiers": [
+        "PREMIUM",
+        "PREMIUM",
+        "PREMIUM",
+        "PREMIUM",
+        "PREMIUM",
+        "PREMIUM",
+        "PREMIUM",
+        "PREMIUM",
+        "PREMIUM",
+        "PREMIUM"
+      ],
+      "ticketAmount": 2500,
+      "glassesCount": 0,
+      "glassesAmount": 0,
+      "snacks": [],
+      "snacksAmount": 0,
+      "discount": 0,
+      "promoCode": "",
+      "totalAmount": 2500,
+      "paymentMethod": "UPI (Google Pay / PhonePe)",
+      "customerName": "Alex Mercer",
+      "customerEmail": "alex.mercer@cinepass.com",
+      "customerPhone": "+91 98765 43210",
+      "createdAt": "2026-10-01T17:34:37.779Z",
+      "status": "Confirmed"
+    },
     {
       "id": "CV-80505",
       "movieId": "mov-leo",

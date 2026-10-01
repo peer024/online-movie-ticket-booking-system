@@ -83,10 +83,41 @@ export default function App() {
     return matchesSearch && matchesCategory;
   });
 
+  // Check if a showtime has already ended for 'Today'
+  const isShowtimePast = (timeStr) => {
+    if (selectedDate !== 'Today') return false;
+    if (!timeStr) return false;
+    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!match) return false;
+    let [_, hours, minutes, ampm] = match;
+    hours = parseInt(hours, 10);
+    minutes = parseInt(minutes, 10);
+    if (ampm.toUpperCase() === 'PM' && hours < 12) hours += 12;
+    if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
+
+    const now = new Date();
+    const showDateTime = new Date();
+    showDateTime.setHours(hours, minutes, 0, 0);
+
+    return now > showDateTime;
+  };
+
   // Flow handlers
   const handleSelectShowtime = (movie, showtime) => {
+    // Merge live localStorage booked seats
+    let localBooked = [];
+    try {
+      localBooked = JSON.parse(localStorage.getItem(`bookedSeats_${showtime.id}`) || '[]');
+    } catch (e) {}
+
+    const mergedShowtime = {
+      ...showtime,
+      date: showtime.date || selectedDate,
+      bookedSeats: Array.from(new Set([...(showtime.bookedSeats || []), ...localBooked]))
+    };
+
     setSelectedMovie(movie);
-    setSelectedShowtime(showtime);
+    setSelectedShowtime(mergedShowtime);
     setCurrentView('seat-selection');
   };
 
@@ -102,7 +133,7 @@ export default function App() {
       movieTitle: selectedMovie?.title || 'Feature Film',
       showType: '2D',
       format: selectedShowtime?.format || 'RAM - RGB ATMOS',
-      date: selectedShowtime?.date || 'Today',
+      date: selectedShowtime?.date || selectedDate,
       time: selectedShowtime?.time || '07:00 PM',
       hall: selectedShowtime?.hall || 'Audi 1',
       seats: seatBookingState?.seats || ['F10', 'F11'],
@@ -113,9 +144,35 @@ export default function App() {
       paymentMethod: 'UPI Checkout',
       status: 'Confirmed'
     });
+
+    // Immediately persist booked seats in React state & localStorage
+    const bookedShowtimeId = validBooking.showtimeId || selectedShowtime?.id;
+    const newlyBookedSeats = validBooking.seats || seatBookingState?.seats || [];
+    if (bookedShowtimeId && newlyBookedSeats.length > 0) {
+      try {
+        const key = `bookedSeats_${bookedShowtimeId}`;
+        const existing = JSON.parse(localStorage.getItem(key) || '[]');
+        const updated = Array.from(new Set([...existing, ...newlyBookedSeats]));
+        localStorage.setItem(key, JSON.stringify(updated));
+      } catch (e) {}
+
+      setAllShowtimes(prev => prev.map(st => {
+        if (st.id === bookedShowtimeId) {
+          return {
+            ...st,
+            bookedSeats: Array.from(new Set([...(st.bookedSeats || []), ...newlyBookedSeats]))
+          };
+        }
+        return st;
+      }));
+    }
+
     setConfirmedBooking(validBooking);
     setShowCheckoutModal(false);
     setCurrentView('ticket');
+
+    // Background sync with API
+    fetchData();
   };
 
   const handleResetFlow = () => {
@@ -154,16 +211,30 @@ export default function App() {
 
   // Get showtimes for a movie
   const getMovieShowtimes = (movieId) => {
-    const movieShows = allShowtimes.filter(s => s.movieId === movieId);
-    if (movieShows.length > 0) return movieShows;
-    
-    // Default fallback showtimes if none explicitly configured in DB
-    return [
-      { id: `st-${movieId}-1`, movieId, date: 'Today', time: '11:30 AM', hall: 'Audi 1', sound: 'RAM - RGB ATMOS', priceTiers: { executive: 190, classic: 150 } },
-      { id: `st-${movieId}-2`, movieId, date: 'Today', time: '03:00 PM', hall: 'Audi 1', sound: 'RAM - RGB ATMOS', priceTiers: { executive: 190, classic: 150 } },
-      { id: `st-${movieId}-3`, movieId, date: 'Today', time: '06:45 PM', hall: 'Audi 1', sound: 'RAM - RGB ATMOS', priceTiers: { executive: 190, classic: 150 } },
-      { id: `st-${movieId}-4`, movieId, date: 'Today', time: '10:15 PM', hall: 'Audi 1', sound: 'RAM - RGB ATMOS', priceTiers: { executive: 190, classic: 150 } }
-    ];
+    let movieShows = allShowtimes.filter(s => s.movieId === movieId);
+    if (!movieShows || movieShows.length === 0) {
+      // Default fallback showtimes if none explicitly configured in DB
+      movieShows = [
+        { id: `st-${movieId}-1`, movieId, date: 'Today', time: '11:30 AM', hall: 'Audi 1', sound: 'RAM - RGB ATMOS', priceTiers: { executive: 190, classic: 150 }, bookedSeats: ['F03', 'F04', 'N11'] },
+        { id: `st-${movieId}-2`, movieId, date: 'Today', time: '03:00 PM', hall: 'Audi 1', sound: 'RAM - RGB ATMOS', priceTiers: { executive: 190, classic: 150 }, bookedSeats: ['G11', 'G12'] },
+        { id: `st-${movieId}-3`, movieId, date: 'Today', time: '06:45 PM', hall: 'Audi 1', sound: 'RAM - RGB ATMOS', priceTiers: { executive: 190, classic: 150 }, bookedSeats: ['H05', 'H06'] },
+        { id: `st-${movieId}-4`, movieId, date: 'Today', time: '10:15 PM', hall: 'Audi 1', sound: 'RAM - RGB ATMOS', priceTiers: { executive: 190, classic: 150 }, bookedSeats: ['J14', 'J15'] },
+        { id: `st-${movieId}-5`, movieId, date: 'Today', time: '11:45 PM', hall: 'Audi 1', sound: 'RAM - RGB ATMOS', priceTiers: { executive: 190, classic: 150 }, bookedSeats: [] }
+      ];
+    }
+
+    // Always merge live localStorage booked seats
+    return movieShows.map(st => {
+      let localBooked = [];
+      try {
+        localBooked = JSON.parse(localStorage.getItem(`bookedSeats_${st.id}`) || '[]');
+      } catch (e) {}
+      return {
+        ...st,
+        date: st.date || selectedDate,
+        bookedSeats: Array.from(new Set([...(st.bookedSeats || []), ...localBooked]))
+      };
+    });
   };
 
   return (
@@ -367,11 +438,12 @@ export default function App() {
                       <div className="flex flex-wrap items-center gap-3">
                         {showtimes.map(st => {
                           const isHovered = hoveredShowtimeId === `${movie.id}-${st.id}`;
+                          const isPast = isShowtimePast(st.time);
 
                           return (
                             <div key={st.id} className="relative">
                               {/* Price popup on hover matching Image 1 */}
-                              {isHovered && (
+                              {isHovered && !isPast && (
                                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-white border border-gray-200 rounded-xl p-3 shadow-xl z-30 pointer-events-none animate-fade-in">
                                   <div className="grid grid-cols-2 gap-2 text-center text-xs">
                                     <div className="p-1.5 rounded bg-gray-50">
@@ -391,16 +463,26 @@ export default function App() {
 
                               {/* Showtime Box Button (Image 1) */}
                               <button
+                                disabled={isPast}
                                 onMouseEnter={() => setHoveredShowtimeId(`${movie.id}-${st.id}`)}
                                 onMouseLeave={() => setHoveredShowtimeId(null)}
-                                onClick={() => handleSelectShowtime(movie, st)}
-                                className="px-4 py-2 rounded-xl bg-white border border-emerald-500 hover:bg-emerald-600 hover:text-white transition-all text-center cursor-pointer group shadow-2xs"
+                                onClick={() => !isPast && handleSelectShowtime(movie, st)}
+                                className={`px-4 py-2 rounded-xl transition-all text-center group shadow-2xs ${
+                                  isPast
+                                    ? 'bg-gray-100 border border-gray-200 cursor-not-allowed opacity-60'
+                                    : 'bg-white border border-emerald-500 hover:bg-emerald-600 hover:text-white cursor-pointer'
+                                }`}
+                                title={isPast ? 'This screening has already ended' : `Book ${st.time}`}
                               >
-                                <div className="font-bold text-sm text-emerald-700 group-hover:text-white">
+                                <div className={`font-bold text-sm ${
+                                  isPast ? 'text-gray-400 line-through' : 'text-emerald-700 group-hover:text-white'
+                                }`}>
                                   {st.time}
                                 </div>
-                                <div className="text-[9px] font-semibold text-gray-500 group-hover:text-emerald-100 uppercase tracking-tight">
-                                  {st.sound || 'RAM - RGB ATMOS'}
+                                <div className={`text-[9px] font-semibold uppercase tracking-tight ${
+                                  isPast ? 'text-rose-600 font-bold' : 'text-gray-500 group-hover:text-emerald-100'
+                                }`}>
+                                  {isPast ? 'SHOW ENDED' : (st.sound || 'RAM - RGB ATMOS')}
                                 </div>
                               </button>
                             </div>
