@@ -11,10 +11,10 @@ import CheckoutModal from './components/booking/CheckoutModal';
 import DigitalTicket from './components/booking/DigitalTicket';
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminLoginModal from './components/admin/AdminLoginModal';
-import DeveloperCard3D from './components/common/DeveloperCard3D';
+import ProjectCredits from './components/common/ProjectCredits';
 import { api } from './services/api';
 import { sound } from './services/soundEngine';
-import { Search, Sparkles, Filter, Film, Clapperboard, Layers, Glasses, Flame } from 'lucide-react';
+import { Search, Sparkles, Filter, Film, Clapperboard, Layers, Glasses, Flame, Ticket } from 'lucide-react';
 
 export default function App() {
   const [currentView, setCurrentView] = useState('home'); // 'home' | 'seat-selection' | 'snacks' | 'ticket'
@@ -294,18 +294,18 @@ export default function App() {
                 <div>
                   <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
                     <span>
-                      {activeCategoryFilter === 'tamil' ? '🔥 தமிழ் Kollywood Blockbusters' :
-                       activeCategoryFilter === '3d' ? '🕶️ 3D Stereoscopic Theatrical Releases' :
-                       activeCategoryFilter === '2d' ? '🎬 2D Ultra Clear Laser Screenings' :
-                       'Now Screening in CineVerse Theaters'}
+                      {activeCategoryFilter === 'tamil' ? '🔥 Tamil Blockbusters' :
+                       activeCategoryFilter === '3d' ? '🕶️ 3D Movie Shows' :
+                       activeCategoryFilter === '2d' ? '🎬 2D Regular Shows' :
+                       'Now Showing in Theatres'}
                     </span>
                   </h2>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    Click any title to choose between 3D Experiences or 2D Regular Screenings
+                    Select any movie to choose showtimes and book your tickets
                   </p>
                 </div>
-                <div className="text-xs text-cyan-400 font-mono font-bold">
-                  {filteredMovies.length} TITLES FOUND
+                <div className="text-xs text-rose-400 font-mono font-bold">
+                  {filteredMovies.length} MOVIES AVAILABLE
                 </div>
               </div>
 
@@ -322,12 +322,12 @@ export default function App() {
                       }}
                       className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
                         selectedGenre === g
-                          ? 'bg-cyan-500 text-black border-cyan-400 shadow-md shadow-cyan-500/30'
-                          : 'bg-white/5 border-white/10 text-slate-300 hover:text-white hover:bg-white/10'
+                          ? 'bg-rose-500 text-white border-rose-500 shadow-md shadow-rose-500/20'
+                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800'
                       }`}
                     >
                       <span>{g}</span>
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${selectedGenre === g ? 'bg-black/30 text-black font-mono' : 'bg-white/10 text-slate-400'}`}>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${selectedGenre === g ? 'bg-black/30 text-white font-mono' : 'bg-slate-800 text-slate-400'}`}>
                         {count}
                       </span>
                     </button>
@@ -337,8 +337,8 @@ export default function App() {
 
               {loading ? (
                 <div className="h-64 flex flex-col items-center justify-center gap-3">
-                  <div className="w-8 h-8 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-                  <p className="text-xs text-slate-400 font-mono">LOADING CINEMA MATRIX...</p>
+                  <div className="w-8 h-8 rounded-full border-2 border-rose-500 border-t-transparent animate-spin" />
+                  <p className="text-xs text-slate-400 font-medium">Loading movie catalog...</p>
                 </div>
               ) : filteredMovies.length === 0 ? (
                 <div className="py-16 text-center text-slate-400 text-xs bg-slate-900/40 rounded-3xl border border-white/10">
@@ -358,43 +358,43 @@ export default function App() {
               )}
             </div>
 
-            {/* Next-Gen Technology Banner */}
-            <div className="relative rounded-3xl overflow-hidden border border-cyan-500/30 bg-gradient-to-r from-slate-950 via-slate-900 to-cyan-950/40 p-8 shadow-2xl">
+            {/* Cinema System Features Banner */}
+            <div className="rounded-2xl border border-slate-800 bg-[#0d121f] p-6 sm:p-8 shadow-lg">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                  <div className="p-2.5 rounded-2xl bg-cyan-500/20 text-cyan-400 inline-block">
-                    <Glasses className="w-6 h-6" />
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-center">
+                    <Ticket className="w-5 h-5" />
                   </div>
-                  <h4 className="font-black text-white text-base">Dedicated 3D & 2D Separation</h4>
+                  <h4 className="font-bold text-white text-base">Interactive Seat Layout</h4>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Filter IMAX 3D, RealD 3D with sanitized 3D glasses vs high-resolution 2D Dolby Atmos shows with one tap.
+                    Choose your favorite seats with row-wise VIP, Executive, and Classic pricing in real-time.
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <div className="p-2.5 rounded-2xl bg-amber-500/20 text-amber-400 inline-block">
-                    <Flame className="w-6 h-6" />
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+                    <Flame className="w-5 h-5" />
                   </div>
-                  <h4 className="font-black text-white text-base">Tamil Kollywood Premieres</h4>
+                  <h4 className="font-bold text-white text-base">Latest Blockbusters</h4>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Full catalog support for Thalapathy Vijay, Superstar Rajinikanth, Kamal Haasan, and Sivakarthikeyan blockbusters.
+                    Watch official HD YouTube trailers and select showtimes for Tamil and Pan-Indian releases.
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <div className="p-2.5 rounded-2xl bg-purple-500/20 text-purple-400 inline-block">
-                    <Sparkles className="w-6 h-6" />
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
+                    <Film className="w-5 h-5" />
                   </div>
-                  <h4 className="font-black text-white text-base">First-Person Seat POV</h4>
+                  <h4 className="font-bold text-white text-base">Instant E-Ticket Pass</h4>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Sit in your chair in WebGL 3D before booking. Preview exact screen focal angles and row elevations.
+                    Get your booking confirmed instantly with QR code verification, print slip, and image download.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* 3D Holographic Glitter Developer Showcase */}
-            <DeveloperCard3D />
+            {/* Academic Project Credits */}
+            <ProjectCredits />
           </div>
         ) : currentView === 'seat-selection' ? (
           <SeatSelector

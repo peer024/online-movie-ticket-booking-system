@@ -1,7 +1,7 @@
 {
   "name": "cineverse-backend",
   "version": "1.0.0",
-  "description": "Backend API for CineVerse 3D Online Movie Ticket Booking System",
+  "description": "Backend API for CinePass Online Movie Ticket Booking System",
   "main": "src/server.js",
   "type": "module",
   "scripts": {

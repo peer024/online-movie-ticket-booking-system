@@ -95,7 +95,7 @@ export default function CheckoutModal({
         discount: promoDiscount,
         promoCode: appliedPromo || '',
         totalAmount: netTotal,
-        paymentMethod: paymentMethod === 'upi' ? 'UPI / Quantum QR' : 'CyberCard Titanium',
+        paymentMethod: paymentMethod === 'upi' ? 'UPI (Google Pay / PhonePe)' : 'Debit / Credit Card',
         customerName,
         customerEmail,
         customerPhone
@@ -310,8 +310,8 @@ export default function CheckoutModal({
                 <CreditCard className="w-5 h-5" />
               </div>
               <div>
-                <div className="font-bold text-xs">CyberCard Chip</div>
-                <div className="text-[10px] text-slate-400">Visa, Mastercard, Amex</div>
+                <div className="font-bold text-xs">Debit / Credit Card</div>
+                <div className="text-[10px] text-slate-400">Visa, Mastercard, RuPay</div>
               </div>
             </button>
           </div>

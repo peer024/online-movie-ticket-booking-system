@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import CinemaHall3D from './CinemaHall3D';
 import { api } from '../../services/api';
 import { sound } from '../../services/soundEngine';
-import { Box, Grid3X3, ArrowRight, ArrowLeft, Ticket, Glasses, ShieldCheck, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Ticket, Glasses, AlertCircle, ArrowRight } from 'lucide-react';
 
 function generateFallbackSeats(showtime) {
   const rows = [
-    { row: 'A', tier: 'VIP', price: showtime?.priceTiers?.vip || 480, totalCols: 8 },
-    { row: 'B', tier: 'VIP', price: showtime?.priceTiers?.vip || 480, totalCols: 8 },
-    { row: 'C', tier: 'Executive', price: showtime?.priceTiers?.executive || 340, totalCols: 10 },
-    { row: 'D', tier: 'Executive', price: showtime?.priceTiers?.executive || 340, totalCols: 10 },
-    { row: 'E', tier: 'Executive', price: showtime?.priceTiers?.executive || 340, totalCols: 10 },
-    { row: 'F', tier: 'Classic', price: showtime?.priceTiers?.classic || 220, totalCols: 10 },
-    { row: 'G', tier: 'Classic', price: showtime?.priceTiers?.classic || 220, totalCols: 10 },
-    { row: 'H', tier: 'Classic', price: showtime?.priceTiers?.classic || 220, totalCols: 10 }
+    { row: 'A', tier: 'VIP Recliner', price: showtime?.priceTiers?.vip || 350, totalCols: 8 },
+    { row: 'B', tier: 'VIP Recliner', price: showtime?.priceTiers?.vip || 350, totalCols: 8 },
+    { row: 'C', tier: 'Executive', price: showtime?.priceTiers?.executive || 250, totalCols: 10 },
+    { row: 'D', tier: 'Executive', price: showtime?.priceTiers?.executive || 250, totalCols: 10 },
+    { row: 'E', tier: 'Executive', price: showtime?.priceTiers?.executive || 250, totalCols: 10 },
+    { row: 'F', tier: 'Classic', price: showtime?.priceTiers?.classic || 150, totalCols: 10 },
+    { row: 'G', tier: 'Classic', price: showtime?.priceTiers?.classic || 150, totalCols: 10 },
+    { row: 'H', tier: 'Classic', price: showtime?.priceTiers?.classic || 150, totalCols: 10 }
   ];
 
   const booked = new Set(showtime?.bookedSeats || ['A3', 'A4', 'C5', 'C6']);
@@ -47,7 +46,6 @@ export default function SeatSelector({
   const [seatsData, setSeatsData] = useState(() => generateFallbackSeats(showtime));
   const [loading, setLoading] = useState(false);
   const [selectedSeats, setSelectedSeats] = useState([]);
-  const [viewMode, setViewMode] = useState('3d'); // '3d' | '2d'
   const [errorMsg, setErrorMsg] = useState('');
 
   // 3D Glasses Option (for 3D shows)
@@ -86,13 +84,15 @@ export default function SeatSelector({
 
     if (selectedSeats.includes(seatId)) {
       setSelectedSeats(prev => prev.filter(s => s !== seatId));
+      sound.playSeatDeselect();
     } else {
       if (selectedSeats.length >= 8) {
         sound.playError();
-        setErrorMsg('Maximum 8 tickets per booking reached.');
+        setErrorMsg('Maximum 8 tickets per booking allowed.');
         return;
       }
       setSelectedSeats(prev => [...prev, seatId]);
+      sound.playSeatSelect(target.tier);
     }
   };
 
@@ -121,71 +121,34 @@ export default function SeatSelector({
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Navigation & Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
         <div className="flex items-center gap-4">
           <button
             onClick={() => {
               sound.playClick();
               onBack();
             }}
-            className="p-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 hover:text-white transition-all cursor-pointer"
+            className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer"
+            title="Back to Movies"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <span
-                className={`text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider flex items-center gap-1.5 ${
-                  is3D
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-md shadow-cyan-500/20'
-                    : 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
-                }`}
-              >
-                {is3D ? <Glasses className="w-3.5 h-3.5" /> : null}
-                <span>{showtime?.experience || 'IMAX 3D Laser'}</span>
+              <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                is3D ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30' : 'bg-slate-800 text-slate-300'
+              }`}>
+                {showtime?.format || (is3D ? '3D Experience' : '2D Screening')}
               </span>
-              <span className="text-xs text-slate-400 font-mono">{showtime?.hall}</span>
+              <span className="text-xs text-slate-400 font-medium">{showtime?.hall || 'Audi 1'}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1">{movie?.title}</h1>
-            <p className="text-xs text-slate-400 font-mono mt-0.5">
-              📅 {showtime?.date} at <span className="text-cyan-400 font-bold">{showtime?.time}</span> • {showtime?.sound}
+            <p className="text-xs text-slate-400 mt-0.5">
+              📅 {showtime?.date} • Showtime: <strong className="text-rose-400">{showtime?.time}</strong>
             </p>
           </div>
-        </div>
-
-        {/* View Switcher (3D WebGL vs 2D Plan) */}
-        <div className="flex items-center gap-2 bg-slate-900/80 p-1.5 rounded-2xl border border-white/10 self-start md:self-auto">
-          <button
-            onClick={() => {
-              sound.playClick();
-              setViewMode('3d');
-            }}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              viewMode === '3d'
-                ? 'bg-gradient-to-r from-cyan-400 to-blue-600 text-black shadow-lg shadow-cyan-500/30'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Box className="w-4 h-4" />
-            <span>3D Interactive Hall</span>
-          </button>
-
-          <button
-            onClick={() => {
-              sound.playClick();
-              setViewMode('2d');
-            }}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              viewMode === '2d'
-                ? 'bg-gradient-to-r from-cyan-400 to-blue-600 text-black shadow-lg shadow-cyan-500/30'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Grid3X3 className="w-4 h-4" />
-            <span>2D Grid Plan</span>
-          </button>
         </div>
       </div>
 
@@ -196,125 +159,104 @@ export default function SeatSelector({
         </div>
       )}
 
-      {/* Main Seat Selection Area */}
-      {loading ? (
-        <div className="h-[480px] rounded-2xl border border-white/10 bg-slate-900/40 flex flex-col items-center justify-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-          <p className="text-xs text-slate-400 font-mono tracking-wider">CALIBRATING 3D AUDITORIUM MATRIX...</p>
-        </div>
-      ) : viewMode === '3d' ? (
-        <CinemaHall3D
-          seatsData={seatsData}
-          selectedSeats={selectedSeats}
-          onToggleSeat={toggleSeat}
-          movieTitle={movie?.title || 'Feature Movie'}
-          showType={showtime?.showType || '3D'}
-          experience={showtime?.experience || 'IMAX 3D Laser'}
-        />
-      ) : (
-        /* 2D Grid Plan View */
-        <div className="p-6 md:p-8 rounded-3xl border border-white/10 bg-slate-950/80 shadow-2xl backdrop-blur-xl">
-          {/* Curved Screen */}
-          <div className="w-full flex flex-col items-center mb-10">
-            <div className="w-3/4 max-w-xl h-2.5 rounded-t-full bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_25px_rgba(0,245,255,0.8)]" />
-            <div className="text-[10px] text-cyan-400/80 font-mono tracking-widest uppercase mt-2">
-              {is3D ? '🕶️ IMAX 3D CURVED SILVER SCREEN ALL EYES THIS WAY' : '🎬 2D RGB LASER MASTER SCREEN'}
-            </div>
+      {/* Main Standard 2D Interactive Seat Map (Like BookMyShow) */}
+      <div className="p-6 sm:p-8 rounded-2xl border border-slate-800 bg-[#0d121f] shadow-xl">
+        {/* Cinema Curved Screen Indicator */}
+        <div className="w-full flex flex-col items-center mb-10">
+          <div className="w-3/4 max-w-lg h-2 rounded-t-full bg-gradient-to-r from-transparent via-rose-500 to-transparent shadow-[0_0_15px_rgba(244,63,94,0.5)]" />
+          <div className="text-[11px] text-slate-400 font-semibold tracking-wider uppercase mt-2.5">
+            SCREEN THIS WAY
           </div>
+        </div>
 
-          {/* Seat Grid Rows */}
-          <div className="flex flex-col gap-3 items-center max-w-3xl mx-auto">
-            {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(rowLabel => {
-              const rowSeats = seatsData.filter(s => s.row === rowLabel);
-              const tier = rowSeats[0]?.tier || 'Classic';
-              return (
-                <div key={rowLabel} className="flex items-center gap-3">
-                  <span className="w-6 font-mono text-xs font-bold text-slate-500 text-right">{rowLabel}</span>
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    {rowSeats.map(seat => {
-                      const isSelected = selectedSeats.includes(seat.id);
-                      return (
-                        <button
-                          key={seat.id}
-                          disabled={seat.isBooked}
-                          onClick={() => {
-                            toggleSeat(seat.id);
-                            if (isSelected) {
-                              sound.playSeatDeselect();
-                            } else {
-                              sound.playSeatSelect(seat.tier);
-                            }
-                          }}
-                          className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-[11px] font-mono font-bold transition-all flex items-center justify-center border ${
-                            seat.isBooked
-                              ? 'bg-slate-900 border-slate-800 text-slate-700 cursor-not-allowed'
-                              : isSelected
-                              ? 'bg-cyan-400 text-black border-cyan-300 shadow-lg shadow-cyan-400/50 scale-105'
-                              : tier === 'VIP'
-                              ? 'bg-amber-950/40 border-amber-600/40 text-amber-300 hover:border-amber-400 hover:bg-amber-900/50'
-                              : tier === 'Executive'
-                              ? 'bg-sky-950/40 border-sky-600/40 text-sky-300 hover:border-sky-400 hover:bg-sky-900/50'
-                              : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:border-slate-500 hover:bg-slate-700'
-                          }`}
-                        >
-                          {seat.number}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <span className="w-6 font-mono text-xs font-bold text-slate-500 text-left">{rowLabel}</span>
+        {/* Seat Grid Rows */}
+        <div className="flex flex-col gap-3 items-center max-w-2xl mx-auto overflow-x-auto py-2">
+          {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].map(rowLabel => {
+            const rowSeats = seatsData.filter(s => s.row === rowLabel);
+            const tier = rowSeats[0]?.tier || 'Classic';
+            const price = rowSeats[0]?.price || 150;
+
+            return (
+              <div key={rowLabel} className="flex items-center gap-3">
+                <span className="w-6 font-mono text-xs font-bold text-slate-500 text-right">{rowLabel}</span>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  {rowSeats.map(seat => {
+                    const isSelected = selectedSeats.includes(seat.id);
+                    return (
+                      <button
+                        key={seat.id}
+                        disabled={seat.isBooked}
+                        onClick={() => toggleSeat(seat.id)}
+                        className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg text-xs font-mono font-bold transition-all flex items-center justify-center border cursor-pointer ${
+                          seat.isBooked
+                            ? 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed opacity-50'
+                            : isSelected
+                            ? 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/30 scale-105 font-black'
+                            : tier.includes('VIP')
+                            ? 'bg-amber-950/40 border-amber-600/40 text-amber-300 hover:border-amber-400 hover:bg-amber-900/50'
+                            : tier.includes('Executive')
+                            ? 'bg-sky-950/40 border-sky-600/40 text-sky-300 hover:border-sky-400 hover:bg-sky-900/50'
+                            : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:border-slate-500 hover:bg-slate-700'
+                        }`}
+                        title={`${seat.id} - ${seat.tier} (₹${seat.price})`}
+                      >
+                        {seat.number}
+                      </button>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
+                <span className="w-6 font-mono text-xs font-bold text-slate-500 text-left">{rowLabel}</span>
+              </div>
+            );
+          })}
+        </div>
 
-          {/* Legend */}
-          <div className="flex flex-wrap items-center justify-center gap-6 mt-8 pt-6 border-t border-white/10 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-amber-950/60 border border-amber-500/50" />
-              <span className="text-amber-200">VIP Lounger (₹480)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-sky-950/60 border border-sky-500/50" />
-              <span className="text-sky-200">Executive (₹340)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-slate-800 border border-slate-600" />
-              <span className="text-slate-300">Classic (₹220)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-cyan-400 shadow-sm shadow-cyan-400" />
-              <span className="text-cyan-300 font-semibold">Selected</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-slate-900 border border-slate-800" />
-              <span className="text-slate-600">Reserved</span>
-            </div>
+        {/* Legend */}
+        <div className="flex flex-wrap items-center justify-center gap-6 mt-8 pt-6 border-t border-slate-800 text-xs">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-amber-950/60 border border-amber-500/50" />
+            <span className="text-amber-200">VIP Recliner (₹{showtime?.priceTiers?.vip || 350})</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-sky-950/60 border border-sky-500/50" />
+            <span className="text-sky-200">Executive (₹{showtime?.priceTiers?.executive || 250})</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-slate-800 border border-slate-600" />
+            <span className="text-slate-300">Classic (₹{showtime?.priceTiers?.classic || 150})</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-emerald-500 border border-emerald-400" />
+            <span className="text-emerald-300 font-semibold">Selected</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded bg-slate-900 border border-slate-800 opacity-50" />
+            <span className="text-slate-500">Booked</span>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* 3D Glasses Add-on Option Banner (Only for 3D shows) */}
+      {/* 3D Glasses Option Banner (Only for 3D shows) */}
       {is3D && (
-        <div className="mt-4 p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/30 flex items-center justify-between gap-4">
+        <div className="mt-4 p-4 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
+            <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400">
               <Glasses className="w-5 h-5" />
             </div>
             <div>
               <div className="text-xs font-bold text-white flex items-center gap-2">
-                <span>Sanitized High-Contrast 3D Glasses</span>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-400/20 text-cyan-300 font-mono">
+                <span>Include 3D Glasses</span>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 font-mono">
                   +₹{glassesUnitFee} / seat
                 </span>
               </div>
               <p className="text-[11px] text-slate-400">
-                Essential for IMAX 3D / RealD depth perception. Sanitized and packed for you at the entrance.
+                Packed 3D glasses issued at cinema entrance. Uncheck if you bring your own.
               </p>
             </div>
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer bg-black/60 px-3.5 py-2 rounded-xl border border-cyan-500/30">
+          <label className="flex items-center gap-2 cursor-pointer bg-slate-950 px-3.5 py-2 rounded-lg border border-slate-800">
             <input
               type="checkbox"
               checked={needGlasses}
@@ -325,16 +267,16 @@ export default function SeatSelector({
               className="accent-cyan-400 w-4 h-4 rounded cursor-pointer"
             />
             <span className="text-xs font-bold text-cyan-300">
-              {needGlasses ? 'Included' : 'Bring Own'}
+              {needGlasses ? 'Included' : 'Skip'}
             </span>
           </label>
         </div>
       )}
 
       {/* Sticky Bottom Action Drawer */}
-      <div className="mt-6 p-4 rounded-3xl bg-slate-900/90 backdrop-blur-xl border border-white/15 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xl">
+      <div className="mt-6 p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+          <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
             <Ticket className="w-5 h-5" />
           </div>
           <div>
@@ -343,12 +285,12 @@ export default function SeatSelector({
             </div>
             <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
               {selectedSeats.length === 0 ? (
-                <span className="text-xs text-slate-500 italic">No seats picked yet</span>
+                <span className="text-xs text-slate-500 italic">No seats selected</span>
               ) : (
                 selectedSeats.map(s => (
                   <span
                     key={s}
-                    className="px-2 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-300 font-mono text-xs font-bold border border-cyan-500/40"
+                    className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-xs font-bold border border-emerald-500/40"
                   >
                     {s}
                   </span>
@@ -361,9 +303,9 @@ export default function SeatSelector({
         <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
           <div className="text-right">
             <div className="text-[11px] text-slate-400 uppercase tracking-wider">
-              Subtotal {glassesAmount > 0 ? `(incl. 3D glasses ₹${glassesAmount})` : ''}
+              Total Amount {glassesAmount > 0 ? `(incl. glasses ₹${glassesAmount})` : ''}
             </div>
-            <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">
+            <div className="text-2xl font-black text-rose-400">
               ₹{(subtotal + glassesAmount).toLocaleString()}
             </div>
           </div>
@@ -371,9 +313,9 @@ export default function SeatSelector({
           <button
             onClick={handleContinue}
             disabled={selectedSeats.length === 0}
-            className={`flex items-center gap-2 px-6 py-3.5 rounded-2xl font-black text-sm transition-all ${
+            className={`flex items-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
               selectedSeats.length > 0
-                ? 'bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-600 text-black shadow-xl shadow-cyan-500/30 hover:shadow-cyan-400/50 hover:scale-[1.02] cursor-pointer'
+                ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/30'
                 : 'bg-slate-800 text-slate-500 cursor-not-allowed'
             }`}
           >

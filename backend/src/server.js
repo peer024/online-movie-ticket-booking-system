@@ -33,7 +33,7 @@ app.use((req, res, next) => {
 
 // Health Check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', system: 'CineVerse 3D Engine', timestamp: new Date() });
+  res.json({ status: 'ok', system: 'CinePass Cinema Engine', timestamp: new Date() });
 });
 
 // ======================== MOVIES ========================
@@ -378,6 +378,6 @@ export default app;
 const isMain = process.argv[1] && path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1]);
 if (isMain && !process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`🎬 CineVerse 3D Server running on http://localhost:${PORT}`);
+    console.log(`🎬 CinePass Backend Server running on http://localhost:${PORT}`);
   });
 }

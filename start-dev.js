@@ -9,8 +9,8 @@ const isWindows = process.platform === 'win32';
 const npmCmd = isWindows ? 'npm.cmd' : 'npm';
 
 console.log('\n=============================================================');
-console.log('🚀 Starting CineVerse 3D Unified Development Servers...');
-console.log('🎬 Project by Kombaiya & Ashik Chandru');
+console.log('🎬 Starting CinePass Online Movie Ticket Booking System...');
+console.log('👨‍💻 Academic Project by: Kombaiya & Ashik Chandru');
 console.log('=============================================================\n');
 
 // 1. Start Backend API Server (Port 5000)
@@ -22,7 +22,7 @@ const backend = spawn(npmCmd, ['run', 'dev'], {
 });
 
 // 2. Start Frontend Vite Development Server (Port 5173)
-console.log('🎨 Starting React + Three.js Frontend on http://localhost:5173 ...\n');
+console.log('🎨 Starting React Frontend on http://localhost:5173 ...\n');
 const frontend = spawn(npmCmd, ['run', 'dev'], {
   cwd: path.join(__dirname, 'frontend'),
   stdio: 'inherit',
@@ -30,7 +30,7 @@ const frontend = spawn(npmCmd, ['run', 'dev'], {
 });
 
 const cleanup = () => {
-  console.log('\n🛑 Shutting down CineVerse 3D development servers...');
+  console.log('\n🛑 Shutting down CinePass development servers...');
   try { backend.kill(); } catch (e) {}
   try { frontend.kill(); } catch (e) {}
   process.exit(0);
