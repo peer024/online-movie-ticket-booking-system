@@ -196,27 +196,29 @@ export default function SeatSelector({
 
       {/* Main Theater Auditorium Container matching TicketNew / Ram Muthuram Cinemas */}
       <div className="p-4 sm:p-8 rounded-2xl border border-gray-200 bg-white shadow-xs overflow-x-auto">
-        {/* Curved Screen Indicator */}
-        <div className="w-full flex flex-col items-center mb-8">
-          <div className="w-3/4 max-w-xl h-2 rounded-t-full bg-emerald-500/60 shadow-xs" />
-          <div className="text-[11px] text-gray-400 font-semibold tracking-wider uppercase mt-2">
-            All eyes this way please! Screen
-          </div>
-        </div>
-
         {/* Seating Layout Grid */}
         <div className="flex flex-col items-center min-w-[700px] mx-auto py-2">
-          {/* Tier 1: Premium */}
-          <div className="w-full text-center text-xs font-bold text-gray-500 uppercase tracking-widest my-3 py-1.5 border-b border-gray-100">
-            ₹{showtime?.priceTiers?.executive || 190} PREMIUM
+          {/* Tier 1: Premium (Top / Back of Hall - Elevated) */}
+          <div className="w-full text-center text-xs font-bold text-gray-500 uppercase tracking-widest my-3 py-1.5 border-b border-gray-100 flex items-center justify-center gap-2">
+            <span>₹{showtime?.priceTiers?.executive || 190} PREMIUM</span>
+            <span className="text-[10px] text-gray-400 font-normal lowercase">(balcony / rear)</span>
           </div>
           {premiumRows.map(rowLetter => renderSeatRow(rowLetter))}
 
-          {/* Tier 2: Gold */}
-          <div className="w-full text-center text-xs font-bold text-gray-500 uppercase tracking-widest mt-6 mb-3 py-1.5 border-b border-gray-100">
-            ₹{showtime?.priceTiers?.classic || 150} GOLD
+          {/* Tier 2: Gold (Closer to Screen - Front of Hall) */}
+          <div className="w-full text-center text-xs font-bold text-gray-500 uppercase tracking-widest mt-8 mb-3 py-1.5 border-b border-gray-100 flex items-center justify-center gap-2">
+            <span>₹{showtime?.priceTiers?.classic || 150} GOLD</span>
+            <span className="text-[10px] text-gray-400 font-normal lowercase">(front rows)</span>
           </div>
           {goldRows.map(rowLetter => renderSeatRow(rowLetter))}
+        </div>
+
+        {/* Screen Indicator at Bottom (Front of Auditorium) */}
+        <div className="w-full flex flex-col items-center mt-10 mb-4">
+          <div className="w-3/4 max-w-xl h-2.5 rounded-t-full bg-emerald-500/70 shadow-sm" />
+          <div className="text-[11px] text-gray-400 font-semibold tracking-wider uppercase mt-2.5">
+            All eyes this way please! Screen
+          </div>
         </div>
       </div>
 

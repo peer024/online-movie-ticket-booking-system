@@ -13,18 +13,12 @@ export default function ProjectCredits() {
             </div>
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-widest text-rose-600">
-                College Academic Project
+                Engineering Team
               </div>
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
                 Online Movie Ticket Booking System
               </h3>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="px-3.5 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200 text-xs font-semibold">
-              🎓 Mini Project Submission
-            </span>
           </div>
         </div>
 

@@ -120,8 +120,8 @@ export const api = {
     const showtimes = getLocal('showtimes', initialDb.showtimes);
     const showtime = showtimes.find(s => s.id === showtimeId) || showtimes[0] || {
       id: showtimeId || 'st-default',
-      priceTiers: { vip: 480, executive: 340, classic: 220 },
-      bookedSeats: ['A3', 'A4', 'C5', 'C6']
+      priceTiers: { vip: 250, executive: 190, classic: 150 },
+      bookedSeats: ['F03', 'F04', 'N11', 'N12']
     };
 
     const rows = [

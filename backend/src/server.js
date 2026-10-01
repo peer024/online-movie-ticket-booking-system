@@ -134,12 +134,12 @@ app.get('/api/showtimes/:id/seats', (req, res) => {
   const rows = [
     { row: 'A', tier: 'VIP', price: showtime.priceTiers?.vip || 450, totalCols: 8 },
     { row: 'B', tier: 'VIP', price: showtime.priceTiers?.vip || 450, totalCols: 8 },
-    { row: 'C', tier: 'Executive', price: showtime.priceTiers?.executive || 320, totalCols: 10 },
-    { row: 'D', tier: 'Executive', price: showtime.priceTiers?.executive || 320, totalCols: 10 },
-    { row: 'E', tier: 'Executive', price: showtime.priceTiers?.executive || 320, totalCols: 10 },
-    { row: 'F', tier: 'Classic', price: showtime.priceTiers?.classic || 200, totalCols: 10 },
-    { row: 'G', tier: 'Classic', price: showtime.priceTiers?.classic || 200, totalCols: 10 },
-    { row: 'H', tier: 'Classic', price: showtime.priceTiers?.classic || 200, totalCols: 10 }
+    { row: 'C', tier: 'Executive', price: showtime.priceTiers?.executive || 190, totalCols: 10 },
+    { row: 'D', tier: 'Executive', price: showtime.priceTiers?.executive || 190, totalCols: 10 },
+    { row: 'E', tier: 'Executive', price: showtime.priceTiers?.executive || 190, totalCols: 10 },
+    { row: 'F', tier: 'Classic', price: showtime.priceTiers?.classic || 150, totalCols: 10 },
+    { row: 'G', tier: 'Classic', price: showtime.priceTiers?.classic || 150, totalCols: 10 },
+    { row: 'H', tier: 'Classic', price: showtime.priceTiers?.classic || 150, totalCols: 10 }
   ];
 
   const booked = new Set(showtime.bookedSeats || []);

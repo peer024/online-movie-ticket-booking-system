@@ -16,7 +16,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-gray-500 text-xs leading-relaxed max-w-md">
-              A comprehensive Full-Stack Online Movie Ticket Booking System designed for college academic mini-project submission. Features real-time seat selection, movie showtime catalog, food concessions, and digital E-Ticket generation.
+              A modern Online Movie Ticket Booking System featuring real-time theater showtime schedules, authentic multi-column seat reservation, and instant digital E-Ticket generation.
             </p>
           </div>
 
@@ -50,7 +50,7 @@ export default function Footer() {
               <Code2 className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-[11px] text-rose-600 font-semibold uppercase">Academic Project Submission</div>
+              <div className="text-[11px] text-rose-600 font-semibold uppercase">Development & Engineering Team</div>
               <div className="text-sm font-bold text-gray-900 mt-0.5">
                 Designed & Developed by <span className="text-rose-600">Kombaiya & Ashik Chandru</span>
               </div>
@@ -58,12 +58,6 @@ export default function Footer() {
                 Department of Computer Science & Engineering
               </p>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-lg bg-gray-100 text-gray-700 text-xs font-semibold border border-gray-200">
-              College Mini-Project
-            </span>
           </div>
         </div>
 

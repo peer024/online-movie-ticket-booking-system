@@ -405,7 +405,7 @@ const INITIAL_DATA = {
       experience: "IMAX Laser HFR",
       sound: "12-Channel Dolby Atmos",
       glassesFee: 30,
-      priceTiers: { vip: 480, executive: 340, classic: 220 },
+      priceTiers: { vip: 480, executive: 190, classic: 150 },
       bookedSeats: ["A3", "A4", "C5", "C6", "C7", "D8"]
     },
     {
@@ -419,7 +419,7 @@ const INITIAL_DATA = {
       experience: "4K Laser Dolby Atmos (2D)",
       sound: "Dolby Atmos 64-Channel",
       glassesFee: 0,
-      priceTiers: { vip: 400, executive: 280, classic: 170 },
+      priceTiers: { vip: 400, executive: 190, classic: 150 },
       bookedSeats: ["A1", "A2", "D1", "D2"]
     },
     // COOLIE
@@ -434,7 +434,7 @@ const INITIAL_DATA = {
       experience: "IMAX Laser",
       sound: "12-Channel Dolby Atmos",
       glassesFee: 30,
-      priceTiers: { vip: 550, executive: 390, classic: 240 },
+      priceTiers: { vip: 550, executive: 190, classic: 150 },
       bookedSeats: ["A2", "A3", "B3", "B4", "C4", "C5"]
     },
     {
@@ -448,7 +448,7 @@ const INITIAL_DATA = {
       experience: "4K Dual Laser 2D",
       sound: "Dolby Atmos Spatial",
       glassesFee: 0,
-      priceTiers: { vip: 450, executive: 300, classic: 180 },
+      priceTiers: { vip: 450, executive: 190, classic: 150 },
       bookedSeats: ["B4", "B5"]
     },
     // LEO
@@ -463,7 +463,7 @@ const INITIAL_DATA = {
       experience: "4DX Motion & Snow",
       sound: "Dolby Atmos 64-Channel",
       glassesFee: 30,
-      priceTiers: { vip: 500, executive: 360, classic: 230 },
+      priceTiers: { vip: 500, executive: 190, classic: 150 },
       bookedSeats: ["A1", "A2", "C5", "C6"]
     },
     {
@@ -477,7 +477,7 @@ const INITIAL_DATA = {
       experience: "IMAX 70mm Aspect (2D)",
       sound: "12-Channel Atmos",
       glassesFee: 0,
-      priceTiers: { vip: 420, executive: 290, classic: 180 },
+      priceTiers: { vip: 420, executive: 190, classic: 150 },
       bookedSeats: ["D3", "D4"]
     },
     // AMARAN
@@ -492,7 +492,7 @@ const INITIAL_DATA = {
       experience: "4K Laser Dolby Atmos (2D)",
       sound: "Dolby Atmos Spatial Audio",
       glassesFee: 0,
-      priceTiers: { vip: 420, executive: 280, classic: 170 },
+      priceTiers: { vip: 420, executive: 190, classic: 150 },
       bookedSeats: ["A3", "A4", "B3", "B4"]
     },
     // JAILER
@@ -507,7 +507,7 @@ const INITIAL_DATA = {
       experience: "IMAX Laser",
       sound: "12-Channel Atmos",
       glassesFee: 30,
-      priceTiers: { vip: 490, executive: 350, classic: 210 },
+      priceTiers: { vip: 490, executive: 190, classic: 150 },
       bookedSeats: ["C3", "C4", "D5"]
     },
     // VETTAIYAN
@@ -522,7 +522,7 @@ const INITIAL_DATA = {
       experience: "IMAX 2D Laser",
       sound: "12-Channel Dolby Atmos",
       glassesFee: 0,
-      priceTiers: { vip: 440, executive: 310, classic: 190 },
+      priceTiers: { vip: 440, executive: 190, classic: 150 },
       bookedSeats: ["A4", "A5"]
     },
     // VIKRAM
@@ -537,7 +537,7 @@ const INITIAL_DATA = {
       experience: "IMAX Laser",
       sound: "12-Channel Dolby Atmos",
       glassesFee: 30,
-      priceTiers: { vip: 460, executive: 320, classic: 200 },
+      priceTiers: { vip: 460, executive: 190, classic: 150 },
       bookedSeats: ["C4", "C5"]
     },
     // KANGUVA
@@ -552,7 +552,7 @@ const INITIAL_DATA = {
       experience: "Dolby 7.1 Atmos",
       sound: "Dolby Atmos 64-Channel",
       glassesFee: 30,
-      priceTiers: { vip: 450, executive: 310, classic: 190 },
+      priceTiers: { vip: 450, executive: 190, classic: 150 },
       bookedSeats: ["B5", "B6"]
     },
     // MAANAADU
@@ -567,7 +567,7 @@ const INITIAL_DATA = {
       experience: "Dolby Atmos Spatial 2D",
       sound: "Dolby Atmos 64-Ch",
       glassesFee: 0,
-      priceTiers: { vip: 390, executive: 260, classic: 160 },
+      priceTiers: { vip: 390, executive: 190, classic: 150 },
       bookedSeats: ["B2", "B3"]
     },
     // LOVE TODAY
@@ -582,7 +582,7 @@ const INITIAL_DATA = {
       experience: "4K Laser Dolby Atmos",
       sound: "Dolby 7.1 Surround",
       glassesFee: 0,
-      priceTiers: { vip: 380, executive: 250, classic: 150 },
+      priceTiers: { vip: 380, executive: 190, classic: 150 },
       bookedSeats: ["C2", "C3"]
     },
     // DOCTOR
@@ -597,7 +597,7 @@ const INITIAL_DATA = {
       experience: "Dolby Atmos 2D",
       sound: "Dolby Atmos 64-Ch",
       glassesFee: 0,
-      priceTiers: { vip: 380, executive: 250, classic: 150 },
+      priceTiers: { vip: 380, executive: 190, classic: 150 },
       bookedSeats: ["A1", "A2"]
     },
     // DEMONTE COLONY 2
@@ -612,7 +612,7 @@ const INITIAL_DATA = {
       experience: "Nightmare 3D Sound Immersion",
       sound: "Dolby Atmos 12-Channel",
       glassesFee: 30,
-      priceTiers: { vip: 450, executive: 320, classic: 200 },
+      priceTiers: { vip: 450, executive: 190, classic: 150 },
       bookedSeats: ["D4", "D5"]
     },
     // SITA RAMAM
@@ -627,7 +627,7 @@ const INITIAL_DATA = {
       experience: "Cinematic Acoustic 2D",
       sound: "Dolby Atmos Spatial",
       glassesFee: 0,
-      priceTiers: { vip: 390, executive: 260, classic: 160 },
+      priceTiers: { vip: 390, executive: 190, classic: 150 },
       bookedSeats: ["A5", "A6"]
     },
     // DUNE PART 2
@@ -642,7 +642,7 @@ const INITIAL_DATA = {
       experience: "IMAX Laser HFR",
       sound: "12-Channel Dolby Atmos",
       glassesFee: 30,
-      priceTiers: { vip: 550, executive: 390, classic: 240 },
+      priceTiers: { vip: 550, executive: 190, classic: 150 },
       bookedSeats: ["A3", "A4", "B4", "B5"]
     },
     // AVATAR 2
@@ -657,7 +657,7 @@ const INITIAL_DATA = {
       experience: "IMAX Laser 48fps HFR",
       sound: "12-Channel Dolby Atmos",
       glassesFee: 30,
-      priceTiers: { vip: 580, executive: 420, classic: 260 },
+      priceTiers: { vip: 580, executive: 190, classic: 150 },
       bookedSeats: ["A1", "A2", "B3", "B4"]
     }
   ],
