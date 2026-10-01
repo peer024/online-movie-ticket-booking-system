@@ -1,70 +1,77 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
-import MovieHeroCarousel from './components/movies/MovieHeroCarousel';
-import MovieCard from './components/movies/MovieCard';
-import MovieDetailsModal from './components/movies/MovieDetailsModal';
 import TrailerModal from './components/movies/TrailerModal';
 import SeatSelector from './components/booking/SeatSelector';
-import SnackConcessions from './components/booking/SnackConcessions';
 import CheckoutModal from './components/booking/CheckoutModal';
 import DigitalTicket from './components/booking/DigitalTicket';
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminLoginModal from './components/admin/AdminLoginModal';
 import ProjectCredits from './components/common/ProjectCredits';
 import { api } from './services/api';
-import { Search, Film, Layers, Flame, Ticket } from 'lucide-react';
+import { Search, Film, Layers, Flame, Play, ChevronRight, Info } from 'lucide-react';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('home'); // 'home' | 'seat-selection' | 'snacks' | 'ticket'
+  const [currentView, setCurrentView] = useState('home'); // 'home' | 'seat-selection' | 'ticket'
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [movies, setMovies] = useState([]);
+  const [allShowtimes, setAllShowtimes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Filters
-  const [activeCategoryFilter, setActiveCategoryFilter] = useState('all'); // 'all' | 'tamil'
+  // Filters & Date Picker
+  const [selectedDate, setSelectedDate] = useState('Today');
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState('all'); // 'all' | 'tamil' | 'dubbed'
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState('All');
+  const [hoveredShowtimeId, setHoveredShowtimeId] = useState(null);
 
   // Modals & Active selections
-  const [activeDetailsMovie, setActiveDetailsMovie] = useState(null);
   const [activeTrailerMovie, setActiveTrailerMovie] = useState(null);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [selectedShowtime, setSelectedShowtime] = useState(null);
 
-  // Booking Flow State
+  // Booking Flow State (Direct to Checkout, skipping snacks!)
   const [seatBookingState, setSeatBookingState] = useState(null);
-  const [snackBookingState, setSnackBookingState] = useState(null);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState(null);
 
-  const fetchMovies = async () => {
+  // Dates for TicketNew-style horizontal date picker
+  const dateOptions = [
+    { label: 'Today', day: 'THU', date: '01', month: 'OCT' },
+    { label: 'Tomorrow', day: 'FRI', date: '02', month: 'OCT' },
+    { label: 'Sat, 03 Oct', day: 'SAT', date: '03', month: 'OCT' },
+    { label: 'Sun, 04 Oct', day: 'SUN', date: '04', month: 'OCT' },
+    { label: 'Mon, 05 Oct', day: 'MON', date: '05', month: 'OCT' },
+    { label: 'Tue, 06 Oct', day: 'TUE', date: '06', month: 'OCT' },
+    { label: 'Wed, 07 Oct', day: 'WED', date: '07', month: 'OCT' }
+  ];
+
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const data = await api.getMovies();
-      setMovies(data);
+      const [moviesData, showtimesData] = await Promise.all([
+        api.getMovies(),
+        api.getShowtimes()
+      ]);
+      setMovies(moviesData);
+      setAllShowtimes(showtimesData);
     } catch (err) {
-      console.error('Failed to load movies:', err);
+      console.error('Failed to load data:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMovies();
+    fetchData();
   }, []);
 
-  const genres = ['All', 'Action', 'Sci-Fi', 'Comedy', 'Romance', 'Horror', 'Drama', 'Crime', 'Adventure'];
-
-  // Filtering
+  // Filter movies
   const filteredMovies = movies.filter(movie => {
     const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           movie.director?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           movie.tamilTitle?.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesGenre = selectedGenre === 'All' || movie.genre?.includes(selectedGenre);
 
     let matchesCategory = true;
     if (activeCategoryFilter === 'tamil') {
@@ -73,28 +80,19 @@ export default function App() {
       matchesCategory = Boolean(movie.isTamilDubbed);
     }
 
-    return matchesSearch && matchesGenre && matchesCategory;
+    return matchesSearch && matchesCategory;
   });
 
   // Flow handlers
-  const handleSelectMovie = (movie) => {
-    setActiveDetailsMovie(movie);
-  };
-
-  const handleSelectShowtime = (showtime) => {
-    setSelectedMovie(activeDetailsMovie);
+  const handleSelectShowtime = (movie, showtime) => {
+    setSelectedMovie(movie);
     setSelectedShowtime(showtime);
-    setActiveDetailsMovie(null);
     setCurrentView('seat-selection');
   };
 
+  // Direct to Checkout, bypassing snacks!
   const handleSeatProceed = (seatData) => {
     setSeatBookingState(seatData);
-    setCurrentView('snacks');
-  };
-
-  const handleSnackProceed = (snackData) => {
-    setSnackBookingState(snackData);
     setShowCheckoutModal(true);
   };
 
@@ -103,13 +101,13 @@ export default function App() {
       id: `CP-${Math.floor(10000 + Math.random() * 90000)}`,
       movieTitle: selectedMovie?.title || 'Feature Film',
       showType: '2D',
-      format: selectedShowtime?.format || 'Standard',
+      format: selectedShowtime?.format || 'RAM - RGB ATMOS',
       date: selectedShowtime?.date || 'Today',
       time: selectedShowtime?.time || '07:00 PM',
       hall: selectedShowtime?.hall || 'Audi 1',
-      seats: seatBookingState?.seats || ['A1'],
-      seatTiers: seatBookingState?.seatObjects?.map(s => s.tier) || ['Classic'],
-      totalAmount: (seatBookingState?.subtotal || 0) + (snackBookingState?.snacksSubtotal || 0),
+      seats: seatBookingState?.seats || ['F10', 'F11'],
+      seatTiers: seatBookingState?.seatObjects?.map(s => s.tier) || ['PREMIUM'],
+      totalAmount: seatBookingState?.subtotal || 380,
       customerName: 'Valued Guest',
       customerEmail: 'guest@cinepass.com',
       paymentMethod: 'UPI Checkout',
@@ -124,7 +122,6 @@ export default function App() {
     setSelectedMovie(null);
     setSelectedShowtime(null);
     setSeatBookingState(null);
-    setSnackBookingState(null);
     setConfirmedBooking(null);
     setCurrentView('home');
   };
@@ -155,6 +152,20 @@ export default function App() {
     handleResetFlow();
   };
 
+  // Get showtimes for a movie
+  const getMovieShowtimes = (movieId) => {
+    const movieShows = allShowtimes.filter(s => s.movieId === movieId);
+    if (movieShows.length > 0) return movieShows;
+    
+    // Default fallback showtimes if none explicitly configured in DB
+    return [
+      { id: `st-${movieId}-1`, movieId, date: 'Today', time: '11:30 AM', hall: 'Audi 1', sound: 'RAM - RGB ATMOS', priceTiers: { executive: 190, classic: 150 } },
+      { id: `st-${movieId}-2`, movieId, date: 'Today', time: '03:00 PM', hall: 'Audi 1', sound: 'RAM - RGB ATMOS', priceTiers: { executive: 190, classic: 150 } },
+      { id: `st-${movieId}-3`, movieId, date: 'Today', time: '06:45 PM', hall: 'Audi 1', sound: 'RAM - RGB ATMOS', priceTiers: { executive: 190, classic: 150 } },
+      { id: `st-${movieId}-4`, movieId, date: 'Today', time: '10:15 PM', hall: 'Audi 1', sound: 'RAM - RGB ATMOS', priceTiers: { executive: 190, classic: 150 } }
+    ];
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between">
       {/* Top Navbar */}
@@ -182,180 +193,224 @@ export default function App() {
             onLogout={handleAdminLogout}
           />
         ) : currentView === 'home' ? (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
-            {/* Hero Carousel */}
-            <MovieHeroCarousel
-              movies={movies}
-              onSelectMovie={handleSelectMovie}
-              onOpenTrailer={(m) => setActiveTrailerMovie(m)}
-            />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-            {/* Quick Experience Filter Switcher */}
-            <div className="bg-white p-4 md:p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-4">
-                {/* Search Input */}
-                <div className="relative w-full lg:w-80">
-                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Search GOAT, Coolie, Leo, Amaran..."
-                    className="w-full pl-10 pr-4 py-2 rounded-xl bg-gray-50 border border-gray-300 text-gray-900 text-xs placeholder:text-gray-400 focus:border-rose-500 focus:bg-white focus:outline-none transition-all"
-                  />
+            {/* Breadcrumb matching user screenshot */}
+            <div className="text-xs text-gray-400 flex items-center gap-1.5 font-medium">
+              <span className="hover:text-gray-600 cursor-pointer">Home</span>
+              <span>→</span>
+              <span className="hover:text-gray-600 cursor-pointer">Cinemas in Tamil Nadu</span>
+              <span>→</span>
+              <span className="text-gray-700 font-semibold">CinePass Cinemas RGB Atmos</span>
+            </div>
+
+            {/* TicketNew / BookMyShow Date Navigation Bar (Image 1) */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-4 shadow-xs">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                
+                {/* Horizontal Date Picker Buttons */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+                  {dateOptions.map((d, idx) => {
+                    const isSelected = (selectedDate === 'Today' && idx === 0) ||
+                                       (selectedDate === 'Tomorrow' && idx === 1) ||
+                                       (selectedDate === d.label);
+                    return (
+                      <button
+                        key={d.label}
+                        onClick={() => setSelectedDate(idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : d.label)}
+                        className={`flex flex-col items-center justify-center min-w-[65px] px-3 py-2 rounded-xl text-center transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-rose-600 text-white font-bold shadow-xs'
+                            : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'
+                        }`}
+                      >
+                        <span className="text-[10px] uppercase font-semibold">{d.day}</span>
+                        <span className="text-base font-black leading-tight">{d.date}</span>
+                        <span className="text-[10px] uppercase font-semibold">{d.month}</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {/* Categories Pills (All / Tamil) */}
-                <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                  <button
-                    onClick={() => setActiveCategoryFilter('all')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      activeCategoryFilter === 'all'
-                        ? 'bg-rose-600 text-white shadow-xs'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    🔥 All Releases ({movies.length})
-                  </button>
+                {/* Right Filter & Search Controls */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Category Pills */}
+                  <div className="flex items-center gap-1.5 bg-gray-100 p-1 rounded-xl border border-gray-200 text-xs">
+                    <button
+                      onClick={() => setActiveCategoryFilter('all')}
+                      className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                        activeCategoryFilter === 'all'
+                          ? 'bg-white text-gray-900 shadow-xs'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      All ({movies.length})
+                    </button>
+                    <button
+                      onClick={() => setActiveCategoryFilter('tamil')}
+                      className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                        activeCategoryFilter === 'tamil'
+                          ? 'bg-amber-500 text-white shadow-xs'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      தமிழ் Originals
+                    </button>
+                    <button
+                      onClick={() => setActiveCategoryFilter('dubbed')}
+                      className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                        activeCategoryFilter === 'dubbed'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      தமிழ் Dubbed
+                    </button>
+                  </div>
 
-                  <button
-                    onClick={() => setActiveCategoryFilter('tamil')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      activeCategoryFilter === 'tamil'
-                        ? 'bg-amber-500 text-white shadow-xs'
-                        : 'bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100'
-                    }`}
-                  >
-                    <span>தமிழ் Originals</span>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveCategoryFilter('dubbed')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      activeCategoryFilter === 'dubbed'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100'
-                    }`}
-                  >
-                    <span>🎧 தமிழ் Dubbed ({movies.filter(m => m.isTamilDubbed).length})</span>
-                  </button>
+                  {/* Search input */}
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      placeholder="Search movie..."
+                      className="pl-8 pr-3 py-1.5 rounded-xl bg-gray-50 border border-gray-300 text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-rose-500"
+                    />
+                  </div>
                 </div>
+              </div>
 
-                {/* Genre Filter */}
-                <div className="flex items-center gap-2 self-start lg:self-auto">
-                  <Layers className="w-4 h-4 text-gray-500" />
-                  <select
-                    value={selectedGenre}
-                    onChange={e => setSelectedGenre(e.target.value)}
-                    className="px-3 py-2 rounded-xl bg-gray-50 border border-gray-300 text-gray-700 text-xs font-medium focus:outline-none focus:border-rose-500"
-                  >
-                    {genres.map(g => (
-                      <option key={g} value={g}>{g === 'All' ? 'All Genres' : g}</option>
-                    ))}
-                  </select>
+              {/* Status Legend Bar (Image 1) */}
+              <div className="mt-4 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between text-xs text-gray-500">
+                <div className="flex items-center gap-5">
+                  <span className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-600">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                    AVAILABLE
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-600">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                    FAST FILLING
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[11px] font-semibold text-gray-400">
+                    <span className="w-2.5 h-2.5 rounded-full bg-gray-300" />
+                    SOLD OUT
+                  </span>
+                </div>
+                <div className="text-[11px] text-gray-400">
+                  Select time to choose seats directly
                 </div>
               </div>
             </div>
 
-            {/* Movies Catalog Grid */}
-            <div>
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                    <span>
-                      {activeCategoryFilter === 'tamil' ? '🔥 Tamil Original Blockbusters' :
-                       activeCategoryFilter === 'dubbed' ? '🎧 Tamil Dubbed Blockbusters' :
-                       'Now Showing in Theatres'}
-                    </span>
-                  </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Select any movie to choose showtimes and book your tickets
-                  </p>
-                </div>
-                <div className="text-xs text-rose-600 font-mono font-bold">
-                  {filteredMovies.length} MOVIES AVAILABLE
-                </div>
-              </div>
-
-              {/* Genre Quick Filter Bar */}
-              <div className="flex flex-wrap items-center gap-2 mb-6 pb-1 overflow-x-auto">
-                {genres.map(g => {
-                  const count = g === 'All' ? movies.length : movies.filter(m => m.genre?.includes(g)).length;
-                  return (
-                    <button
-                      key={g}
-                      onClick={() => setSelectedGenre(g)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer border ${
-                        selectedGenre === g
-                          ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
-                          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      <span>{g}</span>
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded ${selectedGenre === g ? 'bg-black/20 text-white font-mono' : 'bg-gray-100 text-gray-500'}`}>
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
+            {/* Movie Showtime Schedule Rows matching Image 1 */}
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-xs divide-y divide-gray-100 overflow-hidden">
               {loading ? (
                 <div className="h-64 flex flex-col items-center justify-center gap-3">
                   <div className="w-8 h-8 rounded-full border-2 border-rose-600 border-t-transparent animate-spin" />
-                  <p className="text-xs text-gray-500 font-medium">Loading movie catalog...</p>
+                  <p className="text-xs text-gray-500 font-medium">Loading theater show schedules...</p>
                 </div>
               ) : filteredMovies.length === 0 ? (
-                <div className="py-16 text-center text-gray-500 text-xs bg-white rounded-2xl border border-gray-200">
+                <div className="py-16 text-center text-gray-500 text-xs">
                   No movies matched your current filter criteria.
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-                  {filteredMovies.map(movie => (
-                    <MovieCard
+                filteredMovies.map(movie => {
+                  const showtimes = getMovieShowtimes(movie.id);
+
+                  return (
+                    <div
                       key={movie.id}
-                      movie={movie}
-                      onSelectMovie={handleSelectMovie}
-                      onOpenTrailer={(m) => setActiveTrailerMovie(m)}
-                    />
-                  ))}
-                </div>
+                      className="p-5 sm:p-6 hover:bg-slate-50/60 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-6"
+                    >
+                      {/* Left Side: Movie Details */}
+                      <div className="max-w-md space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-gray-900 text-base sm:text-lg leading-tight">
+                            {movie.title}
+                          </h3>
+                          <span className="px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] font-bold">
+                            {movie.certificate}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                          {movie.isTamilDubbed ? (
+                            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[10px] border border-blue-200">
+                              Tamil Dubbed, 2D
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-bold text-[10px] border border-amber-200">
+                              Tamil, 2D
+                            </span>
+                          )}
+
+                          <span className="text-gray-400">•</span>
+                          <span className="text-gray-500 text-[11px]">{movie.duration}</span>
+                          <span className="text-gray-400">•</span>
+                          <span className="text-gray-500 text-[11px]">{movie.genre?.join(', ')}</span>
+
+                          {movie.trailerUrl && (
+                            <button
+                              onClick={() => setActiveTrailerMovie(movie)}
+                              className="ml-2 inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:text-rose-700 cursor-pointer"
+                            >
+                              <Play className="w-3 h-3 fill-rose-600" />
+                              <span>Trailer</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right Side: Showtime Box Pills (Image 1) */}
+                      <div className="flex flex-wrap items-center gap-3">
+                        {showtimes.map(st => {
+                          const isHovered = hoveredShowtimeId === `${movie.id}-${st.id}`;
+
+                          return (
+                            <div key={st.id} className="relative">
+                              {/* Price popup on hover matching Image 1 */}
+                              {isHovered && (
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-white border border-gray-200 rounded-xl p-3 shadow-xl z-30 pointer-events-none animate-fade-in">
+                                  <div className="grid grid-cols-2 gap-2 text-center text-xs">
+                                    <div className="p-1.5 rounded bg-gray-50">
+                                      <div className="font-bold text-gray-900">₹{st.priceTiers?.executive || 190}.00</div>
+                                      <div className="text-[10px] text-gray-500 font-semibold">PREMIUM</div>
+                                      <div className="text-[10px] text-emerald-600 font-bold">Available</div>
+                                    </div>
+                                    <div className="p-1.5 rounded bg-gray-50">
+                                      <div className="font-bold text-gray-900">₹{st.priceTiers?.classic || 150}.00</div>
+                                      <div className="text-[10px] text-gray-500 font-semibold">GOLD</div>
+                                      <div className="text-[10px] text-emerald-600 font-bold">Available</div>
+                                    </div>
+                                  </div>
+                                  <div className="w-2.5 h-2.5 bg-white border-b border-r border-gray-200 transform rotate-45 absolute -bottom-1.5 left-1/2 -translate-x-1/2" />
+                                </div>
+                              )}
+
+                              {/* Showtime Box Button (Image 1) */}
+                              <button
+                                onMouseEnter={() => setHoveredShowtimeId(`${movie.id}-${st.id}`)}
+                                onMouseLeave={() => setHoveredShowtimeId(null)}
+                                onClick={() => handleSelectShowtime(movie, st)}
+                                className="px-4 py-2 rounded-xl bg-white border border-emerald-500 hover:bg-emerald-600 hover:text-white transition-all text-center cursor-pointer group shadow-2xs"
+                              >
+                                <div className="font-bold text-sm text-emerald-700 group-hover:text-white">
+                                  {st.time}
+                                </div>
+                                <div className="text-[9px] font-semibold text-gray-500 group-hover:text-emerald-100 uppercase tracking-tight">
+                                  {st.sound || 'RAM - RGB ATMOS'}
+                                </div>
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })
               )}
-            </div>
-
-            {/* Cinema System Features Banner */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 shadow-xs">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
-                    <Ticket className="w-5 h-5" />
-                  </div>
-                  <h4 className="font-bold text-gray-900 text-base">Interactive Seat Layout</h4>
-                  <p className="text-xs text-gray-500 leading-relaxed">
-                    Choose your favorite seats with row-wise VIP, Executive, and Classic pricing in real-time.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center">
-                    <Flame className="w-5 h-5" />
-                  </div>
-                  <h4 className="font-bold text-gray-900 text-base">Latest Blockbusters</h4>
-                  <p className="text-xs text-gray-500 leading-relaxed">
-                    Watch official HD YouTube trailers and select showtimes for Tamil and Indian releases.
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center">
-                    <Film className="w-5 h-5" />
-                  </div>
-                  <h4 className="font-bold text-gray-900 text-base">Instant E-Ticket Pass</h4>
-                  <p className="text-xs text-gray-500 leading-relaxed">
-                    Get your booking confirmed instantly with QR code verification, print slip, and image download.
-                  </p>
-                </div>
-              </div>
             </div>
 
             {/* Academic Project Credits */}
@@ -367,13 +422,6 @@ export default function App() {
             showtime={selectedShowtime}
             onProceed={handleSeatProceed}
             onBack={() => setCurrentView('home')}
-          />
-        ) : currentView === 'snacks' ? (
-          <SnackConcessions
-            ticketSubtotal={seatBookingState?.subtotal || 0}
-            selectedSeatsCount={seatBookingState?.seats?.length || 0}
-            onProceed={handleSnackProceed}
-            onBack={() => setCurrentView('seat-selection')}
           />
         ) : currentView === 'ticket' ? (
           <DigitalTicket
@@ -391,14 +439,6 @@ export default function App() {
         />
       )}
 
-      {activeDetailsMovie && (
-        <MovieDetailsModal
-          movie={activeDetailsMovie}
-          onSelectShowtime={handleSelectShowtime}
-          onClose={() => setActiveDetailsMovie(null)}
-        />
-      )}
-
       {activeTrailerMovie && (
         <TrailerModal
           movie={activeTrailerMovie}
@@ -413,11 +453,7 @@ export default function App() {
             showtime: selectedShowtime,
             seats: seatBookingState?.seats || [],
             seatObjects: seatBookingState?.seatObjects || [],
-            subtotal: seatBookingState?.subtotal || 0,
-            showType: '2D',
-            format: selectedShowtime?.format || 'Standard',
-            snacks: snackBookingState?.snacks || [],
-            snacksSubtotal: snackBookingState?.snacksSubtotal || 0
+            subtotal: seatBookingState?.subtotal || 0
           }}
           onSuccess={handleBookingSuccess}
           onClose={() => setShowCheckoutModal(false)}

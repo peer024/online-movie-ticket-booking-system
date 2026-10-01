@@ -13,9 +13,7 @@ export default function CheckoutModal({
     showtime,
     seats,
     seatObjects,
-    subtotal,
-    snacks = [],
-    snacksSubtotal = 0
+    subtotal
   } = bookingInfo;
 
   const [customerName, setCustomerName] = useState('Alex Mercer');
@@ -29,7 +27,7 @@ export default function CheckoutModal({
   const [processing, setProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const grossTotal = subtotal + snacksSubtotal;
+  const grossTotal = subtotal;
   const netTotal = Math.max(0, grossTotal - promoDiscount);
 
   const handleApplyPromo = () => {
@@ -59,21 +57,21 @@ export default function CheckoutModal({
       setErrorMsg('');
 
       const bookingPayload = {
-        movieId: movie.id,
-        movieTitle: movie.title,
-        showtimeId: showtime.id,
+        movieId: movie?.id,
+        movieTitle: movie?.title,
+        showtimeId: showtime?.id,
         showType: '2D',
-        format: showtime.format || 'Standard',
-        date: showtime.date,
-        time: showtime.time,
-        hall: showtime.hall,
-        seats,
-        seatTiers: seatObjects?.map(s => s.tier) || ['Classic'],
+        format: showtime?.format || showtime?.sound || 'RAM - RGB ATMOS',
+        date: showtime?.date || 'Today',
+        time: showtime?.time || '07:00 PM',
+        hall: showtime?.hall || 'Audi / Screen 1',
+        seats: seats || [],
+        seatTiers: seatObjects?.map(s => s.tier) || ['GOLD'],
         ticketAmount: subtotal,
         glassesCount: 0,
         glassesAmount: 0,
-        snacks,
-        snacksAmount: snacksSubtotal,
+        snacks: [],
+        snacksAmount: 0,
         discount: promoDiscount,
         promoCode: appliedPromo || '',
         totalAmount: netTotal,
@@ -123,7 +121,7 @@ export default function CheckoutModal({
         <div className="mb-5">
           <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-semibold uppercase mb-1">
             <ShieldCheck className="w-4 h-4" />
-            <span>Secure Checkout</span>
+            <span>Secure Ticket Checkout</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Confirm & Book Tickets</h2>
         </div>
@@ -138,19 +136,19 @@ export default function CheckoutModal({
         <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 mb-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h3 className="font-bold text-gray-900 text-sm sm:text-base">{movie.title}</h3>
+              <h3 className="font-bold text-gray-900 text-sm sm:text-base">{movie?.title}</h3>
               <p className="text-xs text-gray-500 mt-0.5">
-                {showtime.hall} • {showtime.experience || showtime.sound || 'Dolby Atmos'}
+                {showtime?.hall || 'Screen 1'} • {showtime?.sound || 'RAM - RGB ATMOS'}
               </p>
               <p className="text-xs text-rose-600 font-semibold mt-1">
-                📅 {showtime.date} at {showtime.time}
+                📅 {showtime?.date} at {showtime?.time}
               </p>
             </div>
             <div className="text-right">
-              <span className="text-xs text-gray-500">Seats:</span>
+              <span className="text-xs text-gray-500">Confirmed Seats:</span>
               <div className="flex flex-wrap items-center gap-1 mt-0.5 justify-end">
                 {seats.map(s => (
-                  <span key={s} className="px-2 py-0.5 rounded bg-rose-100 text-rose-700 font-mono font-bold text-xs">
+                  <span key={s} className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono font-bold text-xs">
                     {s}
                   </span>
                 ))}
@@ -164,12 +162,6 @@ export default function CheckoutModal({
               <span>Ticket Subtotal ({seats.length} seats)</span>
               <span className="font-mono text-gray-900 font-semibold">₹{subtotal.toLocaleString()}</span>
             </div>
-            {snacksSubtotal > 0 && (
-              <div className="flex justify-between">
-                <span>Concessions ({snacks.length} items)</span>
-                <span className="font-mono text-amber-600 font-semibold">₹{snacksSubtotal.toLocaleString()}</span>
-              </div>
-            )}
             {promoDiscount > 0 && (
               <div className="flex justify-between text-emerald-600 font-semibold">
                 <span>Promo Discount ({appliedPromo})</span>
@@ -225,7 +217,7 @@ export default function CheckoutModal({
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Email Address</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Email Address (E-Ticket sent here)</label>
             <input
               type="email"
               value={customerEmail}
@@ -287,11 +279,11 @@ export default function CheckoutModal({
           {processing ? (
             <>
               <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-              <span>Processing Payment...</span>
+              <span>Confirming Booking...</span>
             </>
           ) : (
             <>
-              <span>Pay ₹{netTotal.toLocaleString()} & Book Tickets</span>
+              <span>Pay ₹{netTotal.toLocaleString()} & Get Ticket</span>
               <ArrowRight className="w-4 h-4" />
             </>
           )}
