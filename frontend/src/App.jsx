@@ -68,7 +68,9 @@ export default function App() {
 
     let matchesCategory = true;
     if (activeCategoryFilter === 'tamil') {
-      matchesCategory = Boolean(movie.isTamil);
+      matchesCategory = Boolean(movie.isTamil && !movie.isTamilDubbed);
+    } else if (activeCategoryFilter === 'dubbed') {
+      matchesCategory = Boolean(movie.isTamilDubbed);
     }
 
     return matchesSearch && matchesGenre && matchesCategory;
@@ -224,7 +226,18 @@ export default function App() {
                         : 'bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100'
                     }`}
                   >
-                    <span>தமிழ் Blockbusters</span>
+                    <span>தமிழ் Originals</span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveCategoryFilter('dubbed')}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      activeCategoryFilter === 'dubbed'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-blue-50 border border-blue-200 text-blue-800 hover:bg-blue-100'
+                    }`}
+                  >
+                    <span>🎧 தமிழ் Dubbed ({movies.filter(m => m.isTamilDubbed).length})</span>
                   </button>
                 </div>
 
@@ -250,7 +263,9 @@ export default function App() {
                 <div>
                   <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
                     <span>
-                      {activeCategoryFilter === 'tamil' ? '🔥 Tamil Blockbusters' : 'Now Showing in Theatres'}
+                      {activeCategoryFilter === 'tamil' ? '🔥 Tamil Original Blockbusters' :
+                       activeCategoryFilter === 'dubbed' ? '🎧 Tamil Dubbed Blockbusters' :
+                       'Now Showing in Theatres'}
                     </span>
                   </h2>
                   <p className="text-xs text-gray-500 mt-0.5">

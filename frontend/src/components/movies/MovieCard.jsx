@@ -20,11 +20,15 @@ export default function MovieCard({
         {/* Top Badges */}
         <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none z-10">
           <div className="flex items-center gap-1">
-            {movie.isTamil && (
+            {movie.isTamilDubbed ? (
+              <span className="px-2 py-0.5 rounded bg-blue-600 text-white text-[10px] font-bold tracking-wider uppercase shadow-xs">
+                தமிழ் Dubbed
+              </span>
+            ) : movie.isTamil ? (
               <span className="px-2 py-0.5 rounded bg-amber-500 text-white text-[10px] font-bold tracking-wider uppercase shadow-xs">
                 தமிழ்
               </span>
-            )}
+            ) : null}
             <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold">
               {movie.certificate}
             </span>

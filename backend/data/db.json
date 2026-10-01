@@ -581,6 +581,191 @@
       "trailerUrl": "https://www.youtube.com/embed/d9MyW72ELq0",
       "featured": false,
       "accentColor": "#00f5ff"
+    },
+    {
+      "id": "mov-kgf2",
+      "title": "K.G.F: Chapter 2 (Tamil Dubbed)",
+      "tamilTitle": "கே.ஜி.எஃப்: அத்தியாயம் 2",
+      "tagline": "Violence.. Violence.. Violence! I don't like it, I avoid. But violence likes me!",
+      "genre": [
+        "Action",
+        "Crime",
+        "Drama"
+      ],
+      "duration": "2h 48m",
+      "rating": 9.3,
+      "votes": "850K",
+      "certificate": "UA",
+      "language": "Tamil Dubbed (தமிழ்)",
+      "isTamil": true,
+      "isTamilDubbed": true,
+      "has3D": false,
+      "has2D": true,
+      "formats": [
+        "Dolby Atmos",
+        "Screen 1"
+      ],
+      "releaseDate": "2022-04-14",
+      "director": "Prashanth Neel",
+      "cast": [
+        "Yash (Rocky)",
+        "Sanjay Dutt (Adheera)",
+        "Raveena Tandon",
+        "Srinidhi Shetty",
+        "Prakash Raj"
+      ],
+      "synopsis": "Rocky, now the undisputed ruler of the Kolar Gold Fields, must defend his supremacy against Adheera, the government, and international gold cartels in an epic battle for kingdom and honor.",
+      "posterUrl": "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?q=80&w=800&auto=format&fit=crop",
+      "bannerUrl": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600&auto=format&fit=crop",
+      "trailerUrl": "https://www.youtube.com/embed/BIyG_O11QE4",
+      "featured": true
+    },
+    {
+      "id": "mov-kalki",
+      "title": "Kalki 2898 AD (Tamil Dubbed)",
+      "tamilTitle": "கல்கி 2898 AD",
+      "tagline": "When darkness falls upon the world, an avatar will rise in Kashi.",
+      "genre": [
+        "Action",
+        "Sci-Fi",
+        "Adventure"
+      ],
+      "duration": "3h 01m",
+      "rating": 9.1,
+      "votes": "640K",
+      "certificate": "UA",
+      "language": "Tamil Dubbed (தமிழ்)",
+      "isTamil": true,
+      "isTamilDubbed": true,
+      "has3D": false,
+      "has2D": true,
+      "formats": [
+        "Dolby Atmos",
+        "Screen 2"
+      ],
+      "releaseDate": "2024-06-27",
+      "director": "Nag Ashwin",
+      "cast": [
+        "Prabhas (Bhairava)",
+        "Amitabh Bachchan (Ashwatthama)",
+        "Kamal Haasan (Supreme Yaskin)",
+        "Deepika Padukone"
+      ],
+      "synopsis": "Set in the dystopian post-apocalyptic year of 2898 AD in Kashi, the immortal warrior Ashwatthama awaits the tenth avatar of Vishnu to save humanity from Supreme Yaskin's oppressive regime.",
+      "posterUrl": "https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=800&auto=format&fit=crop",
+      "bannerUrl": "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?q=80&w=1600&auto=format&fit=crop",
+      "trailerUrl": "https://www.youtube.com/embed/S3U-C14Y4Jk",
+      "featured": false
+    },
+    {
+      "id": "mov-salaar",
+      "title": "Salaar: Part 1 – Ceasefire (Tamil Dubbed)",
+      "tamilTitle": "சலார்: பார்ட் 1 - சீஸ்பயர்",
+      "tagline": "Blood will flow when the monster unleashes his fury.",
+      "genre": [
+        "Action",
+        "Crime",
+        "Drama"
+      ],
+      "duration": "2h 55m",
+      "rating": 9,
+      "votes": "580K",
+      "certificate": "A",
+      "language": "Tamil Dubbed (தமிழ்)",
+      "isTamil": true,
+      "isTamilDubbed": true,
+      "has3D": false,
+      "has2D": true,
+      "formats": [
+        "Dolby Atmos",
+        "Audi 3"
+      ],
+      "releaseDate": "2023-12-22",
+      "director": "Prashanth Neel",
+      "cast": [
+        "Prabhas (Deva / Salaar)",
+        "Prithviraj Sukumaran (Varadha)",
+        "Shruti Haasan",
+        "Jagapathi Babu"
+      ],
+      "synopsis": "In the ruthless city-state of Khansaar, childhood friends Deva and Varadha become allies in a cutthroat battle for power, before destiny tears their bond apart.",
+      "posterUrl": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop",
+      "bannerUrl": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1600&auto=format&fit=crop",
+      "trailerUrl": "https://www.youtube.com/embed/Jc296561k2Y",
+      "featured": false
+    },
+    {
+      "id": "mov-pushpa2",
+      "title": "Pushpa 2: The Rule (Tamil Dubbed)",
+      "tamilTitle": "புஷ்பா 2: தி ரூல்",
+      "tagline": "Pushpa ante Flower anukuntiva? Wildfire! Thaggedhe Le!",
+      "genre": [
+        "Action",
+        "Crime",
+        "Thriller"
+      ],
+      "duration": "3h 20m",
+      "rating": 9.5,
+      "votes": "920K",
+      "certificate": "UA",
+      "language": "Tamil Dubbed (தமிழ்)",
+      "isTamil": true,
+      "isTamilDubbed": true,
+      "has3D": false,
+      "has2D": true,
+      "formats": [
+        "Dolby Atmos",
+        "Main Screen"
+      ],
+      "releaseDate": "2024-12-05",
+      "director": "Sukumar",
+      "cast": [
+        "Allu Arjun (Pushpa Raj)",
+        "Rashmika Mandanna",
+        "Fahadh Faasil (Shekhawat)"
+      ],
+      "synopsis": "Pushpa Raj rises from a humble red sanders coolie to ruling the syndicate, confronting SP Bhanwar Singh Shekhawat in a fiery clash of ego and dominance.",
+      "posterUrl": "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?q=80&w=800&auto=format&fit=crop",
+      "bannerUrl": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600&auto=format&fit=crop",
+      "trailerUrl": "https://www.youtube.com/embed/F0k9lM3lKk8",
+      "featured": false
+    },
+    {
+      "id": "mov-dp-wolv",
+      "title": "Deadpool & Wolverine (Tamil Dubbed)",
+      "tamilTitle": "டெட்பூல் & வால்வரின் (தமிழ்)",
+      "tagline": "Marvel's dynamic duo in hilarious, high-octane Tamil dub!",
+      "genre": [
+        "Action",
+        "Comedy",
+        "Sci-Fi"
+      ],
+      "duration": "2h 08m",
+      "rating": 9.2,
+      "votes": "740K",
+      "certificate": "A",
+      "language": "Tamil Dubbed (தமிழ்)",
+      "isTamil": true,
+      "isTamilDubbed": true,
+      "has3D": false,
+      "has2D": true,
+      "formats": [
+        "Dolby Atmos",
+        "Screen 4"
+      ],
+      "releaseDate": "2024-07-26",
+      "director": "Shawn Levy",
+      "cast": [
+        "Ryan Reynolds",
+        "Hugh Jackman",
+        "Emma Corrin",
+        "Matthew Macfadyen"
+      ],
+      "synopsis": "Wade Wilson is pulled out of his quiet life by the Time Variance Authority and recruits an alternate Wolverine to save his timeline with hilarious Tamil punch dialogues.",
+      "posterUrl": "https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=800&auto=format&fit=crop",
+      "bannerUrl": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1600&auto=format&fit=crop",
+      "trailerUrl": "https://www.youtube.com/embed/J_g55a8-20k",
+      "featured": false
     }
   ],
   "showtimes": [
@@ -994,6 +1179,213 @@
         "B3",
         "B4"
       ]
+    },
+    {
+      "id": "st-kgf2-1",
+      "movieId": "mov-kgf2",
+      "date": "Today",
+      "time": "03:00 PM",
+      "hall": "Audi 1",
+      "experience": "Standard",
+      "showType": "2D",
+      "format": "Standard",
+      "sound": "Dolby Atmos 7.1",
+      "bookedSeats": [
+        "C4",
+        "C5",
+        "D4"
+      ],
+      "priceTiers": {
+        "vip": 350,
+        "executive": 250,
+        "classic": 150
+      }
+    },
+    {
+      "id": "st-kgf2-2",
+      "movieId": "mov-kgf2",
+      "date": "Today",
+      "time": "07:15 PM",
+      "hall": "Audi 1",
+      "experience": "Standard",
+      "showType": "2D",
+      "format": "Standard",
+      "sound": "Dolby Atmos 7.1",
+      "bookedSeats": [
+        "A1",
+        "A2",
+        "B5"
+      ],
+      "priceTiers": {
+        "vip": 350,
+        "executive": 250,
+        "classic": 150
+      }
+    },
+    {
+      "id": "st-kalki-1",
+      "movieId": "mov-kalki",
+      "date": "Today",
+      "time": "11:15 AM",
+      "hall": "Audi 2",
+      "experience": "Standard",
+      "showType": "2D",
+      "format": "Standard",
+      "sound": "Dolby Atmos 7.1",
+      "bookedSeats": [
+        "C6",
+        "C7"
+      ],
+      "priceTiers": {
+        "vip": 350,
+        "executive": 250,
+        "classic": 150
+      }
+    },
+    {
+      "id": "st-kalki-2",
+      "movieId": "mov-kalki",
+      "date": "Today",
+      "time": "06:30 PM",
+      "hall": "Audi 2",
+      "experience": "Standard",
+      "showType": "2D",
+      "format": "Standard",
+      "sound": "Dolby Atmos 7.1",
+      "bookedSeats": [
+        "B3",
+        "B4",
+        "E5"
+      ],
+      "priceTiers": {
+        "vip": 350,
+        "executive": 250,
+        "classic": 150
+      }
+    },
+    {
+      "id": "st-salaar-1",
+      "movieId": "mov-salaar",
+      "date": "Today",
+      "time": "01:30 PM",
+      "hall": "Audi 3",
+      "experience": "Standard",
+      "showType": "2D",
+      "format": "Standard",
+      "sound": "Dolby Atmos 7.1",
+      "bookedSeats": [
+        "D5",
+        "D6"
+      ],
+      "priceTiers": {
+        "vip": 350,
+        "executive": 250,
+        "classic": 150
+      }
+    },
+    {
+      "id": "st-salaar-2",
+      "movieId": "mov-salaar",
+      "date": "Today",
+      "time": "09:45 PM",
+      "hall": "Audi 3",
+      "experience": "Standard",
+      "showType": "2D",
+      "format": "Standard",
+      "sound": "Dolby Atmos 7.1",
+      "bookedSeats": [
+        "A3",
+        "A4"
+      ],
+      "priceTiers": {
+        "vip": 350,
+        "executive": 250,
+        "classic": 150
+      }
+    },
+    {
+      "id": "st-pushpa2-1",
+      "movieId": "mov-pushpa2",
+      "date": "Today",
+      "time": "10:00 AM",
+      "hall": "Screen 1",
+      "experience": "Standard",
+      "showType": "2D",
+      "format": "Standard",
+      "sound": "Dolby Atmos 7.1",
+      "bookedSeats": [
+        "E3",
+        "E4",
+        "E5"
+      ],
+      "priceTiers": {
+        "vip": 350,
+        "executive": 250,
+        "classic": 150
+      }
+    },
+    {
+      "id": "st-pushpa2-2",
+      "movieId": "mov-pushpa2",
+      "date": "Today",
+      "time": "07:30 PM",
+      "hall": "Screen 1",
+      "experience": "Standard",
+      "showType": "2D",
+      "format": "Standard",
+      "sound": "Dolby Atmos 7.1",
+      "bookedSeats": [
+        "B1",
+        "B2",
+        "C3",
+        "C4"
+      ],
+      "priceTiers": {
+        "vip": 350,
+        "executive": 250,
+        "classic": 150
+      }
+    },
+    {
+      "id": "st-dp-wolv-1",
+      "movieId": "mov-dp-wolv",
+      "date": "Today",
+      "time": "02:45 PM",
+      "hall": "Screen 4",
+      "experience": "Standard",
+      "showType": "2D",
+      "format": "Standard",
+      "sound": "Dolby Atmos 7.1",
+      "bookedSeats": [
+        "D1",
+        "D2"
+      ],
+      "priceTiers": {
+        "vip": 350,
+        "executive": 250,
+        "classic": 150
+      }
+    },
+    {
+      "id": "st-dp-wolv-2",
+      "movieId": "mov-dp-wolv",
+      "date": "Today",
+      "time": "08:30 PM",
+      "hall": "Screen 4",
+      "experience": "Standard",
+      "showType": "2D",
+      "format": "Standard",
+      "sound": "Dolby Atmos 7.1",
+      "bookedSeats": [
+        "A5",
+        "A6",
+        "F4"
+      ],
+      "priceTiers": {
+        "vip": 350,
+        "executive": 250,
+        "classic": 150
+      }
     }
   ],
   "snacks": [

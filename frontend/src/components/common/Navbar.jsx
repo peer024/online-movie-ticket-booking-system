@@ -61,6 +61,17 @@ export default function Navbar({
           >
             <span>தமிழ் Movies</span>
           </button>
+
+          <button
+            onClick={() => onFilterChange('dubbed')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg transition-all cursor-pointer ${
+              activeFilter === 'dubbed'
+                ? 'bg-blue-600 text-white shadow-sm font-bold'
+                : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200'
+            }`}
+          >
+            <span>தமிழ் Dubbed</span>
+          </button>
         </nav>
 
         {/* Right Section: Admin Portal Button */}
