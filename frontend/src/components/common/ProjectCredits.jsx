@@ -84,7 +84,7 @@ export default function ProjectCredits() {
         <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
           <span className="flex items-center gap-1.5 font-medium">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            Department of Computer Science & Engineering
+            Department of Computer Science
           </span>
           <span className="font-semibold text-gray-900">
             Designed & Developed by Kombaiya & Ashik Chandru

@@ -1,7 +1,6 @@
 import os
 import sys
 import shutil
-from datetime import datetime
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -29,17 +28,17 @@ def add_heading_styled(doc, text, level=1):
     run = h.runs[0]
     if level == 1:
         run.font.name = 'Calibri'
-        run.font.size = Pt(17)
+        run.font.size = Pt(16)
         run.font.bold = True
         run.font.color.rgb = RGBColor(15, 23, 42) # Slate-900
     elif level == 2:
         run.font.name = 'Calibri'
-        run.font.size = Pt(13.5)
+        run.font.size = Pt(13)
         run.font.bold = True
         run.font.color.rgb = RGBColor(30, 58, 138) # Deep Blue
     elif level == 3:
         run.font.name = 'Calibri'
-        run.font.size = Pt(11.5)
+        run.font.size = Pt(11)
         run.font.bold = True
         run.font.color.rgb = RGBColor(51, 65, 85) # Slate-700
     return h
@@ -89,7 +88,6 @@ def add_callout_box(doc, title, text):
     set_cell_background(cell, "F1F5F9")
     set_cell_margins(cell, top=140, bottom=140, left=180, right=180)
     
-    # Left accent border
     tcPr = cell._tc.get_or_add_tcPr()
     borders = parse_xml(f'<w:tcBorders {nsdecls("w")}><w:left w:val="single" w:sz="24" w:space="0" w:color="0284C7"/><w:top w:val="none"/><w:right w:val="none"/><w:bottom w:val="none"/></w:tcBorders>')
     tcPr.append(borders)
@@ -172,8 +170,11 @@ def create_table_styled(doc, headers, data, col_widths=None):
 
 def build_full_report(output_path):
     doc = Document()
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    logo_path = os.path.join(base_dir, "msu_college_logo.png")
+    tn_skills_path = os.path.join(base_dir, "tn_skills_logo.png")
 
-    # 1. Page Margins (1 inch)
+    # Configure Margins (1 inch all around)
     for section in doc.sections:
         section.top_margin = Inches(1.0)
         section.bottom_margin = Inches(1.0)
@@ -186,150 +187,255 @@ def build_full_report(output_path):
         footer = section.footer
         f_p = footer.paragraphs[0]
         f_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        f_run = f_p.add_run("Online Movie Ticket Booking System • Kombaiya & Ashik Chandru • Dept of CSE")
+        f_run = f_p.add_run("Online Movie Ticket Booking System • Dept of Computer Science • MSU College, Govindaperi")
         f_run.font.name = 'Calibri'
         f_run.font.size = Pt(8.5)
         f_run.font.color.rgb = RGBColor(148, 163, 184)
 
     # =========================================================================
-    # 1. TITLE / COVER PAGE
+    # 1. TITLE / COVER PAGE (Matches user reference Image 1)
     # =========================================================================
-    p_title_dept = doc.add_paragraph()
-    p_title_dept.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r = p_title_dept.add_run("A PROJECT REPORT ON\n")
-    r.font.name = 'Calibri'
-    r.font.size = Pt(13)
-    r.font.bold = True
-    r.font.color.rgb = RGBColor(100, 116, 139)
+    p_header = doc.add_paragraph()
+    p_header.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_header.paragraph_format.space_before = Pt(10)
+    p_header.paragraph_format.space_after = Pt(28)
+    r_hdr = p_header.add_run("ONLINE MOVIE TICKET BOOKING & THEATER MANAGEMENT SYSTEM")
+    r_hdr.font.name = 'Calibri'
+    r_hdr.font.size = Pt(15)
+    r_hdr.font.bold = True
+    r_hdr.font.color.rgb = RGBColor(0, 0, 0)
 
-    p_proj = doc.add_paragraph()
-    p_proj.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_proj.paragraph_format.space_before = Pt(16)
-    p_proj.paragraph_format.space_after = Pt(14)
-    r_proj = p_proj.add_run("ONLINE MOVIE TICKET BOOKING &\nTHEATER MANAGEMENT SYSTEM")
-    r_proj.font.name = 'Calibri'
-    r_proj.font.size = Pt(22)
-    r_proj.font.bold = True
-    r_proj.font.color.rgb = RGBColor(15, 23, 42)
-
+    # SUBMITTED BY Block
     p_sub = doc.add_paragraph()
     p_sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r_sub = p_sub.add_run("A Modern Full-Stack Web Application Featuring TicketNew/BookMyShow Showtime Scheduling, Real-Time Show Expiration, 3-Block Auditorium Seating Matrix, Concurrency Seat Locking, and Instant E-Ticket Generation\n")
+    p_sub.paragraph_format.space_before = Pt(10)
+    p_sub.paragraph_format.space_after = Pt(16)
+    r_sub = p_sub.add_run("SUBMITTED BY")
     r_sub.font.name = 'Calibri'
-    r_sub.font.size = Pt(11.5)
-    r_sub.font.italic = True
-    r_sub.font.color.rgb = RGBColor(71, 85, 105)
+    r_sub.font.size = Pt(12)
+    r_sub.font.bold = True
+    r_sub.font.color.rgb = RGBColor(0, 0, 0)
 
-    doc.add_paragraph().paragraph_format.space_before = Pt(30)
+    # Student Submission Table
+    tbl_sub = doc.add_table(rows=3, cols=3)
+    tbl_sub.alignment = WD_TABLE_ALIGNMENT.CENTER
+    tbl_sub.autofit = False
+    
+    sub_data = [
+        ("NAME", ":", "KOMBAIYA & ASHIK CHANDRU"),
+        ("REGISTER NO", ":", "------------------------------------"),
+        ("PROJECT TITLE", ":", "ONLINE MOVIE TICKET BOOKING & THEATER MANAGEMENT SYSTEM")
+    ]
+    for r_i, (lbl, colon, val) in enumerate(sub_data):
+        row = tbl_sub.rows[r_i]
+        c0, c1, c2 = row.cells
+        c0.width = Inches(1.8)
+        c1.width = Inches(0.4)
+        c2.width = Inches(4.3)
+        
+        # Cell 0 (Label)
+        p0 = c0.paragraphs[0]
+        p0.paragraph_format.space_before = Pt(2)
+        p0.paragraph_format.space_after = Pt(2)
+        r0 = p0.add_run(lbl)
+        r0.font.name = 'Calibri'
+        r0.font.size = Pt(11)
+        r0.font.bold = True
+        
+        # Cell 1 (Colon)
+        p1 = c1.paragraphs[0]
+        p1.paragraph_format.space_before = Pt(2)
+        p1.paragraph_format.space_after = Pt(2)
+        p1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        r1 = p1.add_run(colon)
+        r1.font.name = 'Calibri'
+        r1.font.size = Pt(11)
+        r1.font.bold = True
+        
+        # Cell 2 (Value)
+        p2 = c2.paragraphs[0]
+        p2.paragraph_format.space_before = Pt(2)
+        p2.paragraph_format.space_after = Pt(2)
+        r2 = p2.add_run(val)
+        r2.font.name = 'Calibri'
+        r2.font.size = Pt(11)
+        r2.font.bold = True
 
-    p_req = doc.add_paragraph()
-    p_req.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r_req = p_req.add_run("Submitted in partial fulfillment of the requirements\nfor the Degree of\nBACHELOR OF TECHNOLOGY\nin\nCOMPUTER SCIENCE AND ENGINEERING\n")
-    r_req.font.name = 'Calibri'
-    r_req.font.size = Pt(12)
-    r_req.font.bold = True
-    r_req.font.color.rgb = RGBColor(51, 65, 85)
+    # Spacing before Logo
+    doc.add_paragraph().paragraph_format.space_before = Pt(20)
 
-    doc.add_paragraph().paragraph_format.space_before = Pt(30)
+    # College Logo (Centered)
+    if os.path.exists(logo_path):
+        p_logo = doc.add_paragraph()
+        p_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_logo.paragraph_format.space_before = Pt(6)
+        p_logo.paragraph_format.space_after = Pt(24)
+        r_logo = p_logo.add_run()
+        r_logo.add_picture(logo_path, width=Inches(2.1))
 
-    p_dev = doc.add_paragraph()
-    p_dev.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r_dev_hdr = p_dev.add_run("DESIGNED AND DEVELOPED BY\n\n")
-    r_dev_hdr.font.name = 'Calibri'
-    r_dev_hdr.font.size = Pt(12)
-    r_dev_hdr.font.bold = True
-    r_dev_hdr.font.color.rgb = RGBColor(100, 116, 139)
+    # College & Department Footer Block (Matching Image 1)
+    p_dept = doc.add_paragraph()
+    p_dept.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_dept.paragraph_format.space_before = Pt(4)
+    p_dept.paragraph_format.space_after = Pt(4)
+    r_d = p_dept.add_run("DEPARTMENT OF COMPUTER SCIENCE")
+    r_d.font.name = 'Calibri'
+    r_d.font.size = Pt(13)
+    r_d.font.bold = True
+    r_d.font.color.rgb = RGBColor(0, 0, 0)
 
-    r_k = p_dev.add_run("KOMBAIYA\n")
-    r_k.font.name = 'Calibri'
-    r_k.font.size = Pt(15)
-    r_k.font.bold = True
-    r_k.font.color.rgb = RGBColor(225, 29, 72) # Rose
+    p_col = doc.add_paragraph()
+    p_col.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_col.paragraph_format.space_before = Pt(4)
+    p_col.paragraph_format.space_after = Pt(4)
+    r_c = p_col.add_run("MANONMANIAM SUNDARANAR UNIVERSITY COLLEGE")
+    r_c.font.name = 'Calibri'
+    r_c.font.size = Pt(13)
+    r_c.font.bold = True
+    r_c.font.color.rgb = RGBColor(0, 0, 0)
 
-    r_kr = p_dev.add_run("(Frontend Architecture, UI/UX Engineering, Seating Matrix & Showtime Engine)\n\n")
-    r_kr.font.name = 'Calibri'
-    r_kr.font.size = Pt(10.5)
-    r_kr.font.italic = True
+    p_loc = doc.add_paragraph()
+    p_loc.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_loc.paragraph_format.space_before = Pt(4)
+    p_loc.paragraph_format.space_after = Pt(16)
+    r_l = p_loc.add_run("GOVINDAPERI – 627414")
+    r_l.font.name = 'Calibri'
+    r_l.font.size = Pt(12)
+    r_l.font.bold = True
+    r_l.font.color.rgb = RGBColor(0, 0, 0)
 
-    r_a = p_dev.add_run("ASHIK CHANDRU\n")
-    r_a.font.name = 'Calibri'
-    r_a.font.size = Pt(15)
-    r_a.font.bold = True
-    r_a.font.color.rgb = RGBColor(2, 132, 199) # Blue
-
-    r_ar = p_dev.add_run("(Backend REST API, State Persistence, Database Management & Admin Console)\n")
-    r_ar.font.name = 'Calibri'
-    r_ar.font.size = Pt(10.5)
-    r_ar.font.italic = True
-
-    doc.add_paragraph().paragraph_format.space_before = Pt(30)
-
-    p_yr = doc.add_paragraph()
-    p_yr.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r_yr = p_yr.add_run("ACADEMIC YEAR: 2025 – 2026\nDEPARTMENT OF COMPUTER SCIENCE & ENGINEERING")
-    r_yr.font.name = 'Calibri'
-    r_yr.font.size = Pt(11)
-    r_yr.font.bold = True
-    r_yr.font.color.rgb = RGBColor(100, 116, 139)
+    p_date = doc.add_paragraph()
+    p_date.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_date.paragraph_format.space_before = Pt(4)
+    p_date.paragraph_format.space_after = Pt(0)
+    r_dt = p_date.add_run("OCTOBER - 2026")
+    r_dt.font.name = 'Calibri'
+    r_dt.font.size = Pt(12)
+    r_dt.font.bold = True
+    r_dt.font.color.rgb = RGBColor(0, 0, 0)
 
     doc.add_page_break()
 
     # =========================================================================
-    # 2. BONAFIDE CERTIFICATE
+    # 2. BONAFIDE CERTIFICATE (Matches user reference Image 2)
     # =========================================================================
-    add_heading_styled(doc, "BONAFIDE CERTIFICATE", level=1)
-    add_body_p(doc, "This is to certify that the project report entitled \"ONLINE MOVIE TICKET BOOKING & THEATER MANAGEMENT SYSTEM\" is the bonafide work carried out by:")
+    # Header with MSU Logo on Left and TN Skills Logo on Right
+    header_tbl = doc.add_table(rows=1, cols=2)
+    header_tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
+    header_tbl.autofit = False
+    c_hl, c_hr = header_tbl.rows[0].cells
+    c_hl.width = Inches(3.25)
+    c_hr.width = Inches(3.25)
     
-    add_bullet(doc, "KOMBAIYA (Frontend Architecture, UI/UX Engineering & Seating Matrix)")
-    add_bullet(doc, "ASHIK CHANDRU (Backend REST API, State Persistence & Admin Console)")
+    if os.path.exists(logo_path):
+        p_hl = c_hl.paragraphs[0]
+        p_hl.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        r_hl = p_hl.add_run()
+        r_hl.add_picture(logo_path, width=Inches(1.2))
+        
+    if os.path.exists(tn_skills_path):
+        p_hr = c_hr.paragraphs[0]
+        p_hr.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        r_hr = p_hr.add_run()
+        r_hr.add_picture(tn_skills_path, width=Inches(1.1))
 
-    add_body_p(doc, "who carried out the project work under my supervision in partial fulfillment of the requirements for the award of the Degree of Bachelor of Technology in Computer Science and Engineering during the academic year 2025 – 2026.")
+    doc.add_paragraph().paragraph_format.space_before = Pt(20)
+
+    p_b_dept = doc.add_paragraph()
+    p_b_dept.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_b_dept.paragraph_format.space_before = Pt(0)
+    p_b_dept.paragraph_format.space_after = Pt(10)
+    r_bd = p_b_dept.add_run("DEPARTMENT OF COMPUTER SCIENCE")
+    r_bd.font.name = 'Calibri'
+    r_bd.font.size = Pt(14)
+    r_bd.font.bold = True
+    r_bd.font.italic = True
+    r_bd.font.color.rgb = RGBColor(0, 0, 0)
+
+    p_b_title = doc.add_paragraph()
+    p_b_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_b_title.paragraph_format.space_before = Pt(4)
+    p_b_title.paragraph_format.space_after = Pt(24)
+    r_bt = p_b_title.add_run("BONAFIDE CERTIFICATE")
+    r_bt.font.name = 'Calibri'
+    r_bt.font.size = Pt(14)
+    r_bt.font.bold = True
+    r_bt.font.underline = True
+    r_bt.font.color.rgb = RGBColor(0, 0, 0)
+
+    # Certificate Body Text matching Image 2
+    p_cert = doc.add_paragraph()
+    p_cert.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+    p_cert.paragraph_format.line_spacing = 1.3
+    p_cert.paragraph_format.space_after = Pt(24)
     
-    add_body_p(doc, "The results and implementations embodied in this report have been thoroughly developed, tested, and verified on a live web server and have not been submitted to any other University or Institute for the award of any degree or diploma.")
-
-    doc.add_paragraph().paragraph_format.space_before = Pt(60)
-
-    # Signature blocks
-    sig_table = doc.add_table(rows=1, cols=2)
-    sig_table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    cell_l, cell_r = sig_table.rows[0].cells
-    cell_l.width = Inches(3.2)
-    cell_r.width = Inches(3.2)
+    r_c1 = p_cert.add_run("This is to certify that ")
+    r_c1.font.name = 'Calibri'; r_c1.font.size = Pt(11)
     
-    p_l = cell_l.paragraphs[0]
-    p_l.add_run("________________________\nINTERNAL GUIDE\nDepartment of CSE")
-    p_l.runs[0].font.name = 'Calibri'
-    p_l.runs[0].font.size = Pt(10)
-    p_l.runs[0].font.bold = True
+    r_c2 = p_cert.add_run("KOMBAIYA and ASHIK CHANDRU")
+    r_c2.font.name = 'Calibri'; r_c2.font.size = Pt(11); r_c2.font.bold = True; r_c2.font.underline = True
+    
+    r_c3 = p_cert.add_run(" (Reg.No: ------------------------------------) a bonafide student of ")
+    r_c3.font.name = 'Calibri'; r_c3.font.size = Pt(11)
+    
+    r_c4 = p_cert.add_run("B.Sc Computer Science")
+    r_c4.font.name = 'Calibri'; r_c4.font.size = Pt(11); r_c4.font.bold = True
+    
+    r_c5 = p_cert.add_run(", submitted the project ")
+    r_c5.font.name = 'Calibri'; r_c5.font.size = Pt(11)
+    
+    r_c6 = p_cert.add_run("ONLINE MOVIE TICKET BOOKING & THEATER MANAGEMENT SYSTEM")
+    r_c6.font.name = 'Calibri'; r_c6.font.size = Pt(11); r_c6.font.bold = True; r_c6.font.underline = True
+    
+    r_c7 = p_cert.add_run(" in External Assessment held on -------------------------- during the Academic Year 2026-2027.")
+    r_c7.font.name = 'Calibri'; r_c7.font.size = Pt(11)
 
-    p_r = cell_r.paragraphs[0]
-    p_r.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    p_r.add_run("________________________\nHEAD OF THE DEPARTMENT\nDepartment of CSE")
-    p_r.runs[0].font.name = 'Calibri'
-    p_r.runs[0].font.size = Pt(10)
-    p_r.runs[0].font.bold = True
+    # Place and Date
+    p_pd = doc.add_paragraph()
+    p_pd.paragraph_format.line_spacing = 1.2
+    p_pd.paragraph_format.space_after = Pt(45)
+    r_pl = p_pd.add_run("Place: Govindaperi\nDate : --------------------------")
+    r_pl.font.name = 'Calibri'; r_pl.font.size = Pt(11)
+
+    # Signatures Table 1: Staff Incharge (MRS. RAJI) & Head of Department
+    sig1_tbl = doc.add_table(rows=1, cols=2)
+    sig1_tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
+    sig1_tbl.autofit = False
+    s1_l, s1_r = sig1_tbl.rows[0].cells
+    s1_l.width = Inches(3.25)
+    s1_r.width = Inches(3.25)
+
+    p_s1l = s1_l.paragraphs[0]
+    p_s1l.paragraph_format.space_after = Pt(0)
+    r_s1l = p_s1l.add_run("MRS. RAJI\nStaff Incharge / Project Guide\nDepartment of Computer Science")
+    r_s1l.font.name = 'Calibri'; r_s1l.font.size = Pt(10.5); r_s1l.font.bold = True
+
+    p_s1r = s1_r.paragraphs[0]
+    p_s1r.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    p_s1r.paragraph_format.space_after = Pt(0)
+    r_s1r = p_s1r.add_run("HEAD OF DEPARTMENT\nDepartment of Computer Science\nMSU College, Govindaperi")
+    r_s1r.font.name = 'Calibri'; r_s1r.font.size = Pt(10.5); r_s1r.font.bold = True
 
     doc.add_paragraph().paragraph_format.space_before = Pt(40)
-    add_body_p(doc, "Submitted for the University Viva-Voce Examination held on: _____________________", bold_prefix="")
 
-    sig_viva = doc.add_table(rows=1, cols=2)
-    sig_viva.alignment = WD_TABLE_ALIGNMENT.CENTER
-    cell_vl, cell_vr = sig_viva.rows[0].cells
-    cell_vl.width = Inches(3.2)
-    cell_vr.width = Inches(3.2)
+    # Signatures Table 2: Internal Examiner & External Examiner
+    sig2_tbl = doc.add_table(rows=1, cols=2)
+    sig2_tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
+    sig2_tbl.autofit = False
+    s2_l, s2_r = sig2_tbl.rows[0].cells
+    s2_l.width = Inches(3.25)
+    s2_r.width = Inches(3.25)
 
-    p_vl = cell_vl.paragraphs[0]
-    p_vl.add_run("\n\n________________________\nINTERNAL EXAMINER")
-    p_vl.runs[0].font.name = 'Calibri'
-    p_vl.runs[0].font.size = Pt(10)
-    p_vl.runs[0].font.bold = True
+    p_s2l = s2_l.paragraphs[0]
+    p_s2l.paragraph_format.space_after = Pt(0)
+    r_s2l = p_s2l.add_run("Internal Examiner")
+    r_s2l.font.name = 'Calibri'; r_s2l.font.size = Pt(10.5); r_s2l.font.bold = True
 
-    p_vr = cell_vr.paragraphs[0]
-    p_vr.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    p_vr.add_run("\n\n________________________\nEXTERNAL EXAMINER")
-    p_vr.runs[0].font.name = 'Calibri'
-    p_vr.runs[0].font.size = Pt(10)
-    p_vr.runs[0].font.bold = True
+    p_s2r = s2_r.paragraphs[0]
+    p_s2r.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    p_s2r.paragraph_format.space_after = Pt(0)
+    r_s2r = p_s2r.add_run("External Examiner")
+    r_s2r.font.name = 'Calibri'; r_s2r.font.size = Pt(10.5); r_s2r.font.bold = True
 
     doc.add_page_break()
 
@@ -337,15 +443,15 @@ def build_full_report(output_path):
     # 3. ACKNOWLEDGEMENT
     # =========================================================================
     add_heading_styled(doc, "ACKNOWLEDGEMENT", level=1)
-    add_body_p(doc, "We express our sincere gratitude and indebtedness to our College Management, Principal, and Head of the Department of Computer Science & Engineering for providing the laboratory infrastructure, network facilities, and continuous encouragement needed to develop and host this Online Movie Ticket Booking & Theater Management System.")
-    add_body_p(doc, "We convey our deepest sense of appreciation and heartfelt thanks to our Project Guide for their constant guidance, valuable suggestions, technical insights, and constructive reviews throughout the system development and verification lifecycle.")
-    add_body_p(doc, "We also express our sincere thanks to all faculty members and non-teaching technical staff of the Department of Computer Science & Engineering for their direct and indirect support during the design, coding, testing, and deployment phases.")
-    add_body_p(doc, "Finally, we dedicate this work with immense gratitude to our parents and friends whose unwavering moral support, encouragement, and patience served as our greatest pillars of strength throughout this project endeavor.")
+    add_body_p(doc, "We express our sincere gratitude and indebtedness to our College Management, Principal, and Head of the Department of Computer Science, Manonmaniam Sundaranar University College, Govindaperi, for providing the computer laboratory infrastructure, internet connectivity, and continuous encouragement needed to develop and host this Online Movie Ticket Booking & Theater Management System.")
+    add_body_p(doc, "We convey our deepest sense of appreciation and heartfelt thanks to our Project Guide MRS. RAJI, Staff Incharge, Department of Computer Science, for her invaluable guidance, technical reviews, constructive suggestions, and continuous mentorship throughout the software design, testing, and implementation phases.")
+    add_body_p(doc, "We also express our sincere thanks to all faculty members and technical staff of the Department of Computer Science for their direct and indirect support during the design, coding, testing, and verification of this web application.")
+    add_body_p(doc, "Finally, we dedicate this work with immense gratitude to our parents and friends whose unwavering moral support, encouragement, and patience served as our greatest pillars of strength throughout this project journey.")
     
     doc.add_paragraph().paragraph_format.space_before = Pt(30)
     p_ack_names = doc.add_paragraph()
     p_ack_names.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    r_ack = p_ack_names.add_run("KOMBAIYA & ASHIK CHANDRU\nDepartment of Computer Science & Engineering")
+    r_ack = p_ack_names.add_run("KOMBAIYA & ASHIK CHANDRU\nDepartment of Computer Science\nManonmaniam Sundaranar University College, Govindaperi")
     r_ack.font.name = 'Calibri'
     r_ack.font.size = Pt(11)
     r_ack.font.bold = True
@@ -357,8 +463,8 @@ def build_full_report(output_path):
     # 4. ABSTRACT
     # =========================================================================
     add_heading_styled(doc, "ABSTRACT", level=1)
-    add_body_p(doc, "The entertainment ticketing industry in India, led by platforms like TicketNew, BookMyShow, and regional multiplexes (such as Ram Muthuram Cinemas, Tirunelveli), requires robust, reliable, and user-friendly digital reservation portals. Many academic ticketing systems either overcomplicate user flows with unnecessary 3D graphics or food concession up-sells, or fail to accurately model real-world cinema auditorium seating geometries and time-based screening rules.")
-    add_body_p(doc, "This project presents the design and full-stack implementation of the Online Movie Ticket Booking & Theater Management System (CinePass), built purposefully using React 18, Vite, Tailwind CSS, Node.js, Express, and JSON Database storage. The architecture has been refined to eliminate all non-essential visual overheads, focusing on real-world practical operations:")
+    add_body_p(doc, "The entertainment ticketing industry in India, led by platforms like TicketNew, BookMyShow, and regional cinema complexes (such as Ram Muthuram Cinemas, Tirunelveli), requires robust, reliable, and user-friendly digital reservation portals. Many academic ticketing systems either overcomplicate user flows with unnecessary 3D graphics and food concession up-sells, or fail to accurately model real-world cinema auditorium seating geometries and time-based screening rules.")
+    add_body_p(doc, "This project presents the design and full-stack implementation of the Online Movie Ticket Booking & Theater Management System (CinePass), built purposefully using React 18, Vite, Tailwind CSS, Node.js, Express, and JSON Database storage. Developed by Kombaiya and Ashik Chandru under the guidance of MRS. RAJI in the Department of Computer Science, Manonmaniam Sundaranar University College, Govindaperi, the architecture eliminates all non-essential visual overheads, focusing on real-world practical operations:")
     
     add_bullet(doc, "Real-World Showtime Scheduling: A TicketNew-inspired 7-day horizontal date selector (Today, Tomorrow, Sat, Sun...) presenting movie listings with certification badges (U, UA, A), language formats (Tamil 2D, Tamil Dubbed 2D), trailers, and green-bordered showtime boxes with live pricing tooltips (₹190.00 PREMIUM | ₹150.00 GOLD).", bold_prefix="1. ")
     add_bullet(doc, "Real-Time Showtime Expiration Engine: Integration of an automatic clock verification algorithm that inspects current day showtimes. Already concluded showtimes (e.g., 11:30 AM or 03:00 PM during evening hours) are automatically disabled, marked with a red 'SHOW ENDED' badge and strikethrough, and locked from booking.", bold_prefix="2. ")
@@ -367,7 +473,7 @@ def build_full_report(output_path):
     add_bullet(doc, "Streamlined Direct Checkout & E-Ticket Generation: Unnecessary food concessions (snacks) screens are bypassed completely, transitioning users directly from seat selection to payment (UPI QR & Card simulation), resulting in an immediate digital E-Ticket with QR code, booking ID, and print capability.", bold_prefix="5. ")
     add_bullet(doc, "Live Admin Screen Occupancy Matrix: A secure administrative portal featuring an identical 24-seat 3-block auditorium occupancy matrix with screen at bottom, live capacity statistics (480 seats), booked/available counts, and occupancy percentages.", bold_prefix="6. ")
 
-    add_body_p(doc, "Comprehensive unit, integration, and concurrency tests verify that the system operates stably, eliminates double-booking hazards, guarantees zero visual distortion across devices, and delivers an authentic ticketing experience ready for academic viva and commercial evaluation.")
+    add_body_p(doc, "Comprehensive unit, integration, and concurrency tests verify that the system operates stably, eliminates double-booking hazards, guarantees zero visual distortion across devices, and delivers an authentic ticketing experience ready for university viva evaluation.")
 
     doc.add_page_break()
 
@@ -436,8 +542,8 @@ def build_full_report(output_path):
     
     add_heading_styled(doc, "1.1 Background and Motivation", level=2)
     add_body_p(doc, "In the modern Indian cinema ecosystem, box-office ticketing represents a critical intersection between high-volume consumer web traffic and mission-critical transaction consistency. Portals such as TicketNew and BookMyShow process millions of seat reservations daily across single-screen theaters, multi-screen multiplexes, and IMAX auditoriums. The operational core of these platforms depends upon presenting instant, date-wise movie schedules, maintaining accurate seat maps reflecting physical auditorium elevations, enforcing showtime expirations, and preventing double-booking race conditions.")
-    add_body_p(doc, "During college academic evaluations and viva presentations, student projects often suffer from two distinct pitfalls: either they are burdened with heavy, unoptimized 3D graphics (WebGL/Three.js) that distract from core full-stack software engineering principles, or they utilize overly simplistic, generic seat grids that fail to mirror real Indian cinema standards (such as row-wise price tiering, aisle separation, and government-mandated price caps).")
-    add_body_p(doc, "Motivated by these real-world requirements, this project—developed by Kombaiya and Ashik Chandru—engineers a production-grade, lightweight, clean, and authentic Online Movie Ticket Booking & Theater Management System tailored directly after real cinema portals like TicketNew and Ram Muthuram Cinemas (Tirunelveli).")
+    add_body_p(doc, "During college academic evaluations and viva presentations in the Department of Computer Science, student projects often suffer from two distinct pitfalls: either they are burdened with heavy, unoptimized 3D graphics (WebGL/Three.js) that distract from core software engineering principles, or they utilize overly simplistic, generic seat grids that fail to mirror real Indian cinema standards (such as row-wise price tiering, aisle separation, and government-mandated price caps).")
+    add_body_p(doc, "Motivated by these real-world requirements, this project—developed by Kombaiya and Ashik Chandru under the supervision of MRS. RAJI at Manonmaniam Sundaranar University College, Govindaperi—engineers a production-grade, lightweight, clean, and authentic Online Movie Ticket Booking & Theater Management System tailored directly after real cinema portals like TicketNew and Ram Muthuram Cinemas (Tirunelveli).")
 
     add_heading_styled(doc, "1.2 Problem Statement", level=2)
     add_body_p(doc, "Traditional academic movie booking implementations face several functional limitations:")
@@ -705,7 +811,7 @@ app.post('/api/bookings', (req, res) => {
     add_heading_styled(doc, "CHAPTER 8: CONCLUSION & FUTURE ENHANCEMENTS", level=1)
     
     add_heading_styled(doc, "8.1 Project Summary", level=2)
-    add_body_p(doc, "The Online Movie Ticket Booking & Theater Management System represents a clean, robust, and industry-standard web engineering achievement. By eliminating distracting 3D gimmicks and food concession barriers, the platform delivers an ultra-fast, intuitive reservation workflow tailored after real Tamil Nadu cinema platforms like TicketNew and Ram Muthuram Cinemas.")
+    add_body_p(doc, "The Online Movie Ticket Booking & Theater Management System represents a clean, robust, and industry-standard web engineering achievement developed in the Department of Computer Science at Manonmaniam Sundaranar University College, Govindaperi. By eliminating distracting 3D gimmicks and food concession barriers, the platform delivers an ultra-fast, intuitive reservation workflow tailored after real Tamil Nadu cinema platforms like TicketNew and Ram Muthuram Cinemas.")
     add_body_p(doc, "The project successfully fulfills all requirements: date-based showtime scheduling, automated real-time showtime expiration, an authentic 24-seat 3-block auditorium matrix with correct stadium elevation (screen at bottom), live multi-user seat locking in solid red, direct payment checkout, and an identical admin occupancy console.")
 
     add_heading_styled(doc, "8.2 Engineering Insights & Best Practices", level=2)
@@ -744,18 +850,39 @@ app.post('/api/bookings', (req, res) => {
         run.font.size = Pt(10)
         run.font.color.rgb = RGBColor(51, 65, 85)
 
-    doc.save(output_path)
-    print(f"[SUCCESS] Successfully generated report at: {output_path}")
+    # Primary target
+    targets = [
+        output_path,
+        os.path.join(base_dir, "Online_Movie_Ticket_Booking_System_Project_Report_CS.docx")
+    ]
+    
+    saved_paths = []
+    for tp in targets:
+        try:
+            doc.save(tp)
+            print(f"[SUCCESS] Successfully generated report at: {tp}")
+            saved_paths.append(tp)
+        except PermissionError:
+            print(f"[WARNING] File is currently opened/locked by another application: {tp}")
+
+    if not saved_paths:
+        fallback = os.path.join(base_dir, "Online_Movie_Ticket_Booking_System_Project_Report_CS_Updated.docx")
+        doc.save(fallback)
+        print(f"[SUCCESS] Saved to fallback: {fallback}")
+        saved_paths.append(fallback)
 
     # Copy to Artifact directory
     artifact_dir = r"C:\Users\peerm\.gemini\antigravity\brain\8df36cdd-b693-42c1-9bf8-4d9521c614bd"
-    artifact_copy = os.path.join(artifact_dir, "Online_Movie_Ticket_Booking_System_Project_Report_Kombaiya_Ashik.docx")
-    try:
-        shutil.copy2(output_path, artifact_copy)
-        print(f"[SUCCESS] Copied report to artifact directory: {artifact_copy}")
-    except Exception as e:
-        print(f"[WARNING] Could not copy to artifact dir: {e}")
+    for sp in saved_paths:
+        fname = os.path.basename(sp)
+        art_dest = os.path.join(artifact_dir, fname)
+        try:
+            shutil.copy2(sp, art_dest)
+            print(f"[SUCCESS] Copied to artifact directory: {art_dest}")
+        except Exception as e:
+            print(f"[WARNING] Could not copy {fname} to artifact dir: {e}")
 
 if __name__ == "__main__":
     output_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Online_Movie_Ticket_Booking_System_Project_Report_Kombaiya_Ashik.docx")
     build_full_report(output_file)
+

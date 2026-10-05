@@ -55,7 +55,7 @@ export default function Footer() {
                 Designed & Developed by <span className="text-rose-600">Kombaiya & Ashik Chandru</span>
               </div>
               <p className="text-[11px] text-gray-500">
-                Department of Computer Science & Engineering
+                Department of Computer Science
               </p>
             </div>
           </div>
