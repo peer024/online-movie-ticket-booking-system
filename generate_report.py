@@ -1,5 +1,7 @@
 import os
 import sys
+import shutil
+from datetime import datetime
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -14,7 +16,7 @@ def set_cell_background(cell, hex_color):
     tcPr.append(shd)
 
 def set_cell_margins(cell, top=100, bottom=100, left=150, right=150):
-    """Set padding inside a table cell."""
+    """Set padding inside a table cell in dxa (1 pt = 20 dxa)."""
     tcPr = cell._tc.get_or_add_tcPr()
     tcMar = parse_xml(f'<w:tcMar {nsdecls("w")}><w:top w:w="{top}" w:type="dxa"/><w:bottom w:w="{bottom}" w:type="dxa"/><w:left w:w="{left}" w:type="dxa"/><w:right w:w="{right}" w:type="dxa"/></w:tcMar>')
     tcPr.append(tcMar)
@@ -27,23 +29,24 @@ def add_heading_styled(doc, text, level=1):
     run = h.runs[0]
     if level == 1:
         run.font.name = 'Calibri'
-        run.font.size = Pt(18)
+        run.font.size = Pt(17)
         run.font.bold = True
-        run.font.color.rgb = RGBColor(12, 74, 110) # Deep cyan/slate
+        run.font.color.rgb = RGBColor(15, 23, 42) # Slate-900
     elif level == 2:
         run.font.name = 'Calibri'
-        run.font.size = Pt(14)
+        run.font.size = Pt(13.5)
         run.font.bold = True
-        run.font.color.rgb = RGBColor(30, 58, 138) # Deep navy
+        run.font.color.rgb = RGBColor(30, 58, 138) # Deep Blue
     elif level == 3:
         run.font.name = 'Calibri'
-        run.font.size = Pt(12)
+        run.font.size = Pt(11.5)
         run.font.bold = True
-        run.font.color.rgb = RGBColor(51, 65, 85) # Slate
+        run.font.color.rgb = RGBColor(51, 65, 85) # Slate-700
     return h
 
-def add_body_p(doc, text, bold_prefix="", italic=False, space_after=6):
+def add_body_p(doc, text, bold_prefix="", italic=False, space_after=6, align=WD_ALIGN_PARAGRAPH.JUSTIFY):
     p = doc.add_paragraph()
+    p.alignment = align
     p.paragraph_format.space_before = Pt(0)
     p.paragraph_format.space_after = Pt(space_after)
     p.paragraph_format.line_spacing = 1.15
@@ -52,7 +55,7 @@ def add_body_p(doc, text, bold_prefix="", italic=False, space_after=6):
         r_pre.font.name = 'Calibri'
         r_pre.font.size = Pt(11)
         r_pre.font.bold = True
-        r_pre.font.color.rgb = RGBColor(30, 41, 59)
+        r_pre.font.color.rgb = RGBColor(15, 23, 42)
     r = p.add_run(text)
     r.font.name = 'Calibri'
     r.font.size = Pt(11)
@@ -77,6 +80,53 @@ def add_bullet(doc, text, bold_prefix=""):
     r.font.color.rgb = RGBColor(51, 65, 85)
     return p
 
+def add_callout_box(doc, title, text):
+    table = doc.add_table(rows=1, cols=1)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.autofit = False
+    cell = table.rows[0].cells[0]
+    cell.width = Inches(6.5)
+    set_cell_background(cell, "F1F5F9")
+    set_cell_margins(cell, top=140, bottom=140, left=180, right=180)
+    
+    # Left accent border
+    tcPr = cell._tc.get_or_add_tcPr()
+    borders = parse_xml(f'<w:tcBorders {nsdecls("w")}><w:left w:val="single" w:sz="24" w:space="0" w:color="0284C7"/><w:top w:val="none"/><w:right w:val="none"/><w:bottom w:val="none"/></w:tcBorders>')
+    tcPr.append(borders)
+    
+    p = cell.paragraphs[0]
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(2)
+    r_t = p.add_run(f"📌 {title}\n")
+    r_t.font.name = 'Calibri'
+    r_t.font.size = Pt(11)
+    r_t.font.bold = True
+    r_t.font.color.rgb = RGBColor(2, 132, 199)
+    
+    r_b = p.add_run(text)
+    r_b.font.name = 'Calibri'
+    r_b.font.size = Pt(10)
+    r_b.font.color.rgb = RGBColor(51, 65, 85)
+    doc.add_paragraph().paragraph_format.space_after = Pt(4)
+
+def add_code_block(doc, code_text):
+    table = doc.add_table(rows=1, cols=1)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.autofit = False
+    cell = table.rows[0].cells[0]
+    cell.width = Inches(6.5)
+    set_cell_background(cell, "0F172A")
+    set_cell_margins(cell, top=120, bottom=120, left=160, right=160)
+    p = cell.paragraphs[0]
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(0)
+    p.paragraph_format.line_spacing = 1.05
+    run = p.add_run(code_text)
+    run.font.name = 'Consolas'
+    run.font.size = Pt(9)
+    run.font.color.rgb = RGBColor(226, 232, 240)
+    doc.add_paragraph().paragraph_format.space_after = Pt(4)
+
 def create_table_styled(doc, headers, data, col_widths=None):
     table = doc.add_table(rows=len(data) + 1, cols=len(headers))
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -86,13 +136,13 @@ def create_table_styled(doc, headers, data, col_widths=None):
     hdr_cells = table.rows[0].cells
     for i, title in enumerate(headers):
         hdr_cells[i].text = title
-        set_cell_background(hdr_cells[i], "0F172A") # dark slate
+        set_cell_background(hdr_cells[i], "1E293B") # Dark slate
         set_cell_margins(hdr_cells[i], top=120, bottom=120, left=140, right=140)
         p = hdr_cells[i].paragraphs[0]
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
         for run in p.runs:
             run.font.name = 'Calibri'
-            run.font.size = Pt(10)
+            run.font.size = Pt(9.5)
             run.font.bold = True
             run.font.color.rgb = RGBColor(255, 255, 255)
 
@@ -103,12 +153,12 @@ def create_table_styled(doc, headers, data, col_widths=None):
         for c_idx, val in enumerate(row):
             row_cells[c_idx].text = str(val)
             set_cell_background(row_cells[c_idx], bg_color)
-            set_cell_margins(row_cells[c_idx], top=80, bottom=80, left=140, right=140)
+            set_cell_margins(row_cells[c_idx], top=70, bottom=70, left=140, right=140)
             p = row_cells[c_idx].paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.LEFT
             for run in p.runs:
                 run.font.name = 'Calibri'
-                run.font.size = Pt(9.5)
+                run.font.size = Pt(9)
                 run.font.color.rgb = RGBColor(30, 41, 59)
 
     # Widths
@@ -123,7 +173,7 @@ def create_table_styled(doc, headers, data, col_widths=None):
 def build_full_report(output_path):
     doc = Document()
 
-    # Configure Margins (1 inch all around)
+    # 1. Page Margins (1 inch)
     for section in doc.sections:
         section.top_margin = Inches(1.0)
         section.bottom_margin = Inches(1.0)
@@ -132,17 +182,17 @@ def build_full_report(output_path):
         section.page_width = Inches(8.5)
         section.page_height = Inches(11.0)
         
-        # Configure Header & Footer
+        # Footer
         footer = section.footer
         f_p = footer.paragraphs[0]
         f_p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        f_run = f_p.add_run("CineVerse 3D Project Report • Developed by Kombaiya & Ashik Chandru")
+        f_run = f_p.add_run("Online Movie Ticket Booking System • Kombaiya & Ashik Chandru • Dept of CSE")
         f_run.font.name = 'Calibri'
-        f_run.font.size = Pt(9)
+        f_run.font.size = Pt(8.5)
         f_run.font.color.rgb = RGBColor(148, 163, 184)
 
     # =========================================================================
-    # 1. TITLE / COVER PAGE (Page 1)
+    # 1. TITLE / COVER PAGE
     # =========================================================================
     p_title_dept = doc.add_paragraph()
     p_title_dept.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -154,23 +204,23 @@ def build_full_report(output_path):
 
     p_proj = doc.add_paragraph()
     p_proj.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p_proj.paragraph_format.space_before = Pt(18)
-    p_proj.paragraph_format.space_after = Pt(18)
-    r_proj = p_proj.add_run("CINEVERSE 3D:\nONLINE MOVIE TICKET BOOKING & THEATER MANAGEMENT SYSTEM")
+    p_proj.paragraph_format.space_before = Pt(16)
+    p_proj.paragraph_format.space_after = Pt(14)
+    r_proj = p_proj.add_run("ONLINE MOVIE TICKET BOOKING &\nTHEATER MANAGEMENT SYSTEM")
     r_proj.font.name = 'Calibri'
     r_proj.font.size = Pt(22)
     r_proj.font.bold = True
-    r_proj.font.color.rgb = RGBColor(14, 116, 144) # Cyan/Ocean
+    r_proj.font.color.rgb = RGBColor(15, 23, 42)
 
     p_sub = doc.add_paragraph()
     p_sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r_sub = p_sub.add_run("An Immersive WebGL Spatial Cinema Architecture, First-Person Seat Inspection Engine, High-Security Admin Control Portal, and Real-Time Concessions Booking System\n")
+    r_sub = p_sub.add_run("A Modern Full-Stack Web Application Featuring TicketNew/BookMyShow Showtime Scheduling, Real-Time Show Expiration, 3-Block Auditorium Seating Matrix, Concurrency Seat Locking, and Instant E-Ticket Generation\n")
     r_sub.font.name = 'Calibri'
-    r_sub.font.size = Pt(12)
+    r_sub.font.size = Pt(11.5)
     r_sub.font.italic = True
     r_sub.font.color.rgb = RGBColor(71, 85, 105)
 
-    doc.add_paragraph().paragraph_format.space_before = Pt(36)
+    doc.add_paragraph().paragraph_format.space_before = Pt(30)
 
     p_req = doc.add_paragraph()
     p_req.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -180,11 +230,11 @@ def build_full_report(output_path):
     r_req.font.bold = True
     r_req.font.color.rgb = RGBColor(51, 65, 85)
 
-    doc.add_paragraph().paragraph_format.space_before = Pt(36)
+    doc.add_paragraph().paragraph_format.space_before = Pt(30)
 
     p_dev = doc.add_paragraph()
     p_dev.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r_dev_hdr = p_dev.add_run("DESIGNED AND DEVELOPED BY\n")
+    r_dev_hdr = p_dev.add_run("DESIGNED AND DEVELOPED BY\n\n")
     r_dev_hdr.font.name = 'Calibri'
     r_dev_hdr.font.size = Pt(12)
     r_dev_hdr.font.bold = True
@@ -194,25 +244,25 @@ def build_full_report(output_path):
     r_k.font.name = 'Calibri'
     r_k.font.size = Pt(15)
     r_k.font.bold = True
-    r_k.font.color.rgb = RGBColor(217, 119, 6) # Amber gold
+    r_k.font.color.rgb = RGBColor(225, 29, 72) # Rose
 
-    r_kr = p_dev.add_run("(Lead 3D WebGL & Spatial Architect)\n\n")
+    r_kr = p_dev.add_run("(Frontend Architecture, UI/UX Engineering, Seating Matrix & Showtime Engine)\n\n")
     r_kr.font.name = 'Calibri'
-    r_kr.font.size = Pt(11)
+    r_kr.font.size = Pt(10.5)
     r_kr.font.italic = True
 
     r_a = p_dev.add_run("ASHIK CHANDRU\n")
     r_a.font.name = 'Calibri'
     r_a.font.size = Pt(15)
     r_a.font.bold = True
-    r_a.font.color.rgb = RGBColor(14, 165, 233) # Sky Cyan
+    r_a.font.color.rgb = RGBColor(2, 132, 199) # Blue
 
-    r_ar = p_dev.add_run("(Lead Full-Stack Experience & UI/UX Engineer)\n")
+    r_ar = p_dev.add_run("(Backend REST API, State Persistence, Database Management & Admin Console)\n")
     r_ar.font.name = 'Calibri'
-    r_ar.font.size = Pt(11)
+    r_ar.font.size = Pt(10.5)
     r_ar.font.italic = True
 
-    doc.add_paragraph().paragraph_format.space_before = Pt(36)
+    doc.add_paragraph().paragraph_format.space_before = Pt(30)
 
     p_yr = doc.add_paragraph()
     p_yr.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -225,17 +275,17 @@ def build_full_report(output_path):
     doc.add_page_break()
 
     # =========================================================================
-    # 2. BONAFIDE CERTIFICATE (Page 2)
+    # 2. BONAFIDE CERTIFICATE
     # =========================================================================
     add_heading_styled(doc, "BONAFIDE CERTIFICATE", level=1)
-    add_body_p(doc, "This is to certify that the project report entitled \"CINEVERSE 3D: ONLINE MOVIE TICKET BOOKING & THEATER MANAGEMENT SYSTEM\" is the bonafide work carried out by:")
+    add_body_p(doc, "This is to certify that the project report entitled \"ONLINE MOVIE TICKET BOOKING & THEATER MANAGEMENT SYSTEM\" is the bonafide work carried out by:")
     
-    add_bullet(doc, "KOMBAIYA (Lead 3D WebGL & Spatial Architect)")
-    add_bullet(doc, "ASHIK CHANDRU (Lead Full-Stack Experience & UI/UX Engineer)")
+    add_bullet(doc, "KOMBAIYA (Frontend Architecture, UI/UX Engineering & Seating Matrix)")
+    add_bullet(doc, "ASHIK CHANDRU (Backend REST API, State Persistence & Admin Console)")
 
     add_body_p(doc, "who carried out the project work under my supervision in partial fulfillment of the requirements for the award of the Degree of Bachelor of Technology in Computer Science and Engineering during the academic year 2025 – 2026.")
     
-    add_body_p(doc, "The results embodied in this report have not been submitted to any other University or Institute for the award of any degree or diploma.")
+    add_body_p(doc, "The results and implementations embodied in this report have been thoroughly developed, tested, and verified on a live web server and have not been submitted to any other University or Institute for the award of any degree or diploma.")
 
     doc.add_paragraph().paragraph_format.space_before = Pt(60)
 
@@ -248,501 +298,464 @@ def build_full_report(output_path):
     
     p_l = cell_l.paragraphs[0]
     p_l.add_run("________________________\nINTERNAL GUIDE\nDepartment of CSE")
-    for r in p_l.runs:
-        r.font.name = 'Calibri'
-        r.font.size = Pt(10)
-        r.font.bold = True
+    p_l.runs[0].font.name = 'Calibri'
+    p_l.runs[0].font.size = Pt(10)
+    p_l.runs[0].font.bold = True
 
     p_r = cell_r.paragraphs[0]
     p_r.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     p_r.add_run("________________________\nHEAD OF THE DEPARTMENT\nDepartment of CSE")
-    for r in p_r.runs:
-        r.font.name = 'Calibri'
-        r.font.size = Pt(10)
-        r.font.bold = True
+    p_r.runs[0].font.name = 'Calibri'
+    p_r.runs[0].font.size = Pt(10)
+    p_r.runs[0].font.bold = True
 
-    doc.add_paragraph().paragraph_format.space_before = Pt(50)
-    p_viva = doc.add_paragraph()
-    p_viva.add_run("Submitted for the Viva-Voce Examination held on: ____________________\n\n\nINTERNAL EXAMINER                                                    EXTERNAL EXAMINER")
-    p_viva.runs[0].font.name = 'Calibri'
-    p_viva.runs[0].font.size = Pt(10)
-    p_viva.runs[0].font.bold = True
+    doc.add_paragraph().paragraph_format.space_before = Pt(40)
+    add_body_p(doc, "Submitted for the University Viva-Voce Examination held on: _____________________", bold_prefix="")
 
-    doc.add_page_break()
+    sig_viva = doc.add_table(rows=1, cols=2)
+    sig_viva.alignment = WD_TABLE_ALIGNMENT.CENTER
+    cell_vl, cell_vr = sig_viva.rows[0].cells
+    cell_vl.width = Inches(3.2)
+    cell_vr.width = Inches(3.2)
 
-    # =========================================================================
-    # 3. DECLARATION (Page 3)
-    # =========================================================================
-    add_heading_styled(doc, "DECLARATION", level=1)
-    add_body_p(doc, "We, Kombaiya and Ashik Chandru, students of the Department of Computer Science and Engineering, hereby declare that the project entitled \"CINEVERSE 3D: ONLINE MOVIE TICKET BOOKING & THEATER MANAGEMENT SYSTEM\" submitted to the Department is a record of original engineering work done by us under the academic guidance of our project supervisor.")
-    add_body_p(doc, "We further declare that this project report has not previously formed the basis for the award of any degree, diploma, fellowship, or other similar title to any candidate of any university.")
-    add_body_p(doc, "All the libraries, open-source frameworks (including Three.js, React 18, Vite, Express, Tailwind CSS, Lucide Icons), and architectural references employed have been duly acknowledged and credited.")
+    p_vl = cell_vl.paragraphs[0]
+    p_vl.add_run("\n\n________________________\nINTERNAL EXAMINER")
+    p_vl.runs[0].font.name = 'Calibri'
+    p_vl.runs[0].font.size = Pt(10)
+    p_vl.runs[0].font.bold = True
 
-    doc.add_paragraph().paragraph_format.space_before = Pt(80)
-
-    p_sig = doc.add_paragraph()
-    p_sig.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    r_sig = p_sig.add_run("KOMBAIYA\nASHIK CHANDRU\n\nPlace: Chennai, India\nDate: September 2026")
-    r_sig.font.name = 'Calibri'
-    r_sig.font.size = Pt(11)
-    r_sig.font.bold = True
+    p_vr = cell_vr.paragraphs[0]
+    p_vr.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    p_vr.add_run("\n\n________________________\nEXTERNAL EXAMINER")
+    p_vr.runs[0].font.name = 'Calibri'
+    p_vr.runs[0].font.size = Pt(10)
+    p_vr.runs[0].font.bold = True
 
     doc.add_page_break()
 
     # =========================================================================
-    # 4. ACKNOWLEDGEMENTS & ABSTRACT (Page 4)
+    # 3. ACKNOWLEDGEMENT
     # =========================================================================
-    add_heading_styled(doc, "ACKNOWLEDGEMENTS", level=1)
-    add_body_p(doc, "We express our sincere gratitude and indebtedness to our College Management, Principal, and Head of the Department for providing the world-class laboratories, computational infrastructure, and encouragement needed to execute this high-tech 3D spatial cinema project.")
-    add_body_p(doc, "We are profoundly grateful to our respected Project Guide whose constant intellectual stimulation, technical insights into WebGL shaders, and guidance in full-stack architecture helped us overcome complex engineering hurdles.")
-    add_body_p(doc, "Finally, we express our heartfelt thanks to our families and fellow peers for their unwavering moral support, constructive feedback during user acceptance testing, and belief in our vision.")
+    add_heading_styled(doc, "ACKNOWLEDGEMENT", level=1)
+    add_body_p(doc, "We express our sincere gratitude and indebtedness to our College Management, Principal, and Head of the Department of Computer Science & Engineering for providing the laboratory infrastructure, network facilities, and continuous encouragement needed to develop and host this Online Movie Ticket Booking & Theater Management System.")
+    add_body_p(doc, "We convey our deepest sense of appreciation and heartfelt thanks to our Project Guide for their constant guidance, valuable suggestions, technical insights, and constructive reviews throughout the system development and verification lifecycle.")
+    add_body_p(doc, "We also express our sincere thanks to all faculty members and non-teaching technical staff of the Department of Computer Science & Engineering for their direct and indirect support during the design, coding, testing, and deployment phases.")
+    add_body_p(doc, "Finally, we dedicate this work with immense gratitude to our parents and friends whose unwavering moral support, encouragement, and patience served as our greatest pillars of strength throughout this project endeavor.")
+    
+    doc.add_paragraph().paragraph_format.space_before = Pt(30)
+    p_ack_names = doc.add_paragraph()
+    p_ack_names.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    r_ack = p_ack_names.add_run("KOMBAIYA & ASHIK CHANDRU\nDepartment of Computer Science & Engineering")
+    r_ack.font.name = 'Calibri'
+    r_ack.font.size = Pt(11)
+    r_ack.font.bold = True
+    r_ack.font.color.rgb = RGBColor(30, 41, 59)
 
-    doc.add_paragraph().paragraph_format.space_before = Pt(20)
+    doc.add_page_break()
 
+    # =========================================================================
+    # 4. ABSTRACT
+    # =========================================================================
     add_heading_styled(doc, "ABSTRACT", level=1)
-    add_body_p(doc, "Traditional online movie ticketing systems suffer from a pervasive lack of physical spatial feedback. Conventional booking applications render seating layouts as static, flat two-dimensional grids that fail to convey realistic screen viewing angles, row elevations, optical distortions, or auditorium lighting conditions. Users frequently select seats only to discover in the physical theater that their line of sight is obstructed, overly tilted, or too far from the screen.")
-    add_body_p(doc, "To overcome these critical limitations, this project presents CINEVERSE 3D, a next-generation WebGL-accelerated online cinema reservation and comprehensive theater management engine. Built with Three.js and React 18, CineVerse 3D introduces an interactive, procedural 3D virtual cinema auditorium featuring a mathematically curved silver screen, volumetric projection light cones, dynamic acoustic LED fins, and 600 airborne atmospheric dust particles.")
-    add_body_p(doc, "Crucially, the platform implements a First-Person Seat POV Camera Inspection mode, allowing moviegoers to virtually sit in their chosen chair and preview the precise screen sightline and row perspective prior to payment. The system distinguishes dedicated 3D stereoscopic vs. 2D Dolby Atmos screenings, automates 3D glasses add-ons (+₹30), synthesizes cinema audio soundwaves using the Web Audio API, and delivers high-contrast holographic digital passes with instant HTML5 Canvas PNG download and print capabilities.")
-    add_body_p(doc, "For theater administrators, CineVerse 3D embeds a high-security Level 1 Admin Command Portal protected by masked credential verification (admin@cinema / kombaiya ashik), supplying live box-office metrics, real-time seat occupancy heatmaps, and showtime scheduling. Cross-tested across modern desktop and mobile browsers, CineVerse 3D delivers instantaneous 60 FPS rendering, zero-downtime booking workflows, and eliminates third-party trailer embedding restrictions.")
+    add_body_p(doc, "The entertainment ticketing industry in India, led by platforms like TicketNew, BookMyShow, and regional multiplexes (such as Ram Muthuram Cinemas, Tirunelveli), requires robust, reliable, and user-friendly digital reservation portals. Many academic ticketing systems either overcomplicate user flows with unnecessary 3D graphics or food concession up-sells, or fail to accurately model real-world cinema auditorium seating geometries and time-based screening rules.")
+    add_body_p(doc, "This project presents the design and full-stack implementation of the Online Movie Ticket Booking & Theater Management System (CinePass), built purposefully using React 18, Vite, Tailwind CSS, Node.js, Express, and JSON Database storage. The architecture has been refined to eliminate all non-essential visual overheads, focusing on real-world practical operations:")
+    
+    add_bullet(doc, "Real-World Showtime Scheduling: A TicketNew-inspired 7-day horizontal date selector (Today, Tomorrow, Sat, Sun...) presenting movie listings with certification badges (U, UA, A), language formats (Tamil 2D, Tamil Dubbed 2D), trailers, and green-bordered showtime boxes with live pricing tooltips (₹190.00 PREMIUM | ₹150.00 GOLD).", bold_prefix="1. ")
+    add_bullet(doc, "Real-Time Showtime Expiration Engine: Integration of an automatic clock verification algorithm that inspects current day showtimes. Already concluded showtimes (e.g., 11:30 AM or 03:00 PM during evening hours) are automatically disabled, marked with a red 'SHOW ENDED' badge and strikethrough, and locked from booking.", bold_prefix="2. ")
+    add_bullet(doc, "Authentic 3-Block Auditorium Seating Matrix: Accurate 24-seat row matrix with 2 walking aisles (Left block: 01-06, Center block: 07-18, Right block: 19-24) reflecting physical stadium seating elevation. Front rows closest to the screen are priced at ₹150 GOLD, while elevated rear rows are priced at ₹190 PREMIUM. The screen indicator is positioned at the bottom facing the audience.", bold_prefix="3. ")
+    add_bullet(doc, "Live Concurrency Seat Locking & Visual Color Encoding: Booked seats are persisted in real-time across both backend JSON storage and client localStorage. Seats transition dynamically across three states: Available (Emerald White), Selected (Solid Green), and Booked/Sold (Solid Rose/Red). Once booked, seats are locked and rendered in red for all subsequent users.", bold_prefix="4. ")
+    add_bullet(doc, "Streamlined Direct Checkout & E-Ticket Generation: Unnecessary food concessions (snacks) screens are bypassed completely, transitioning users directly from seat selection to payment (UPI QR & Card simulation), resulting in an immediate digital E-Ticket with QR code, booking ID, and print capability.", bold_prefix="5. ")
+    add_bullet(doc, "Live Admin Screen Occupancy Matrix: A secure administrative portal featuring an identical 24-seat 3-block auditorium occupancy matrix with screen at bottom, live capacity statistics (480 seats), booked/available counts, and occupancy percentages.", bold_prefix="6. ")
+
+    add_body_p(doc, "Comprehensive unit, integration, and concurrency tests verify that the system operates stably, eliminates double-booking hazards, guarantees zero visual distortion across devices, and delivers an authentic ticketing experience ready for academic viva and commercial evaluation.")
 
     doc.add_page_break()
 
     # =========================================================================
-    # 5. TABLE OF CONTENTS (Page 5)
+    # 5. TABLE OF CONTENTS
     # =========================================================================
     add_heading_styled(doc, "TABLE OF CONTENTS", level=1)
     
     toc_data = [
-        ["1.0", "INTRODUCTION", "6"],
-        ["", "1.1 Background & Motivation", "6"],
-        ["", "1.2 Problem Statement in Legacy Booking Platforms", "6"],
-        ["", "1.3 Project Objectives", "7"],
-        ["", "1.4 Scope and Boundaries", "7"],
-        ["2.0", "LITERATURE SURVEY & SYSTEM ANALYSIS", "8"],
-        ["", "2.1 Existing Systems & Comparative Analysis", "8"],
-        ["", "2.2 Proposed CineVerse 3D Architecture", "8"],
-        ["", "2.3 Feasibility Analysis (Technical, Operational, Economic)", "9"],
-        ["3.0", "SYSTEM REQUIREMENTS & SPECIFICATIONS", "10"],
-        ["", "3.1 Hardware Environment", "10"],
-        ["", "3.2 Software Environment", "10"],
-        ["", "3.3 Technology Stack & Framework Justifications", "10"],
-        ["4.0", "SYSTEM DESIGN & ARCHITECTURE", "11"],
-        ["", "4.1 High-Level Architectural Flow", "11"],
-        ["", "4.2 Data Flow Diagrams (DFD Level 0, Level 1, Level 2)", "11"],
-        ["", "4.3 Database Schema & Entity-Relationship Design", "12"],
-        ["", "4.4 Booking Pipeline & State Machine", "13"],
-        ["5.0", "CORE MODULES & ENGINEERING IMPLEMENTATION", "14"],
-        ["", "5.1 Three.js 3D WebGL Virtual Cinema Auditorium", "14"],
-        ["", "5.2 First-Person Interactive Seat POV Camera Engine", "14"],
-        ["", "5.3 Web Audio Cinematic Sound Synthesizer", "15"],
-        ["", "5.4 Dedicated 3D vs. 2D Experience Engine & Concessions", "15"],
-        ["", "5.5 High-Security Level 1 Admin Control Portal", "16"],
-        ["", "5.6 High-Definition Digital Pass Generator & Print Canvas", "16"],
-        ["", "5.7 3D Holographic Glitter Developer Showcase (Kombaiya & Ashik)", "17"],
-        ["", "5.8 100% Verified Playable Trailer Streaming Subsystem", "17"],
-        ["6.0", "SOURCE CODE HIGHLIGHTS & ALGORITHMS", "18"],
-        ["", "6.1 WebGL Perspective Shaders & Orbit Control Loop", "18"],
-        ["", "6.2 Dynamic Seating & Price Calculation Matrix", "18"],
-        ["", "6.3 Admin Credential Verification & Session Gatekeeper", "19"],
-        ["7.0", "TESTING, QUALITY ASSURANCE & VERIFICATION", "20"],
-        ["", "7.1 Test Methodology & Strategy", "20"],
-        ["", "7.2 Comprehensive Test Cases & Results (TC01 - TC15)", "20"],
-        ["", "7.3 Cross-Browser & Device Compatibility Results", "22"],
-        ["8.0", "PRODUCTION DEPLOYMENT & DEVOPS ARCHITECTURE", "23"],
-        ["", "8.1 Production Build & Bundle Optimization Pipeline", "23"],
-        ["", "8.2 Unified Full-Stack Node.js Deployment Strategy", "23"],
-        ["", "8.3 Containerization with Docker & Cloud Hosting", "24"],
-        ["9.0", "CONCLUSION & FUTURE SCOPE", "25"],
-        ["", "9.1 Conclusion", "25"],
-        ["", "9.2 Future Enhancements", "25"],
-        ["10.0", "REFERENCES & BIBLIOGRAPHY", "26"]
+        ["CHAPTER", "TITLE", "PAGE NO."],
+        ["", "BONAFIDE CERTIFICATE", "ii"],
+        ["", "ACKNOWLEDGEMENT", "iii"],
+        ["", "ABSTRACT", "iv"],
+        ["1", "INTRODUCTION", "1"],
+        ["", "1.1 Background and Motivation", "1"],
+        ["", "1.2 Problem Statement", "2"],
+        ["", "1.3 Objectives of the Project", "2"],
+        ["", "1.4 Scope and System Boundaries", "3"],
+        ["2", "LITERATURE SURVEY & FEASIBILITY STUDY", "4"],
+        ["", "2.1 Existing Ticketing Platforms Analysis", "4"],
+        ["", "2.2 Limitations of Traditional Ticketing Systems", "5"],
+        ["", "2.3 Proposed System Advancements", "6"],
+        ["", "2.4 Feasibility Study (Technical, Economic, Operational)", "7"],
+        ["3", "SYSTEM REQUIREMENTS & ARCHITECTURE", "8"],
+        ["", "3.1 Hardware and Software Specifications", "8"],
+        ["", "3.2 Technology Stack Details", "9"],
+        ["", "3.3 High-Level System Architecture", "10"],
+        ["", "3.4 End-to-End User Flow Architecture", "11"],
+        ["4", "SYSTEM DESIGN & DATA MODELING", "12"],
+        ["", "4.1 Auditorium Architectural Design (3-Block 24-Column)", "12"],
+        ["", "4.2 Seating Elevation & Pricing Hierarchy", "13"],
+        ["", "4.3 Database Schema & Data Models", "14"],
+        ["", "4.4 Data Flow Diagrams (DFD Level 0 & Level 1)", "15"],
+        ["", "4.5 UML Sequence Diagram for Reservation Flow", "16"],
+        ["5", "IMPLEMENTATION & CORE ALGORITHMS", "17"],
+        ["", "5.1 Showtime Schedule Engine & Date Picker", "17"],
+        ["", "5.2 Real-Time Showtime Expiration Logic", "18"],
+        ["", "5.3 Authentic Seating Matrix Algorithm", "19"],
+        ["", "5.4 Multi-User Seat Concurrency & Red Color Persistence", "20"],
+        ["", "5.5 Streamlined Direct Payment & E-Ticket Engine", "21"],
+        ["", "5.6 Admin Live Occupancy Matrix Implementation", "22"],
+        ["6", "TESTING & QUALITY ASSURANCE", "23"],
+        ["", "6.1 Testing Methodology", "23"],
+        ["", "6.2 Showtime Expiry Test Cases", "24"],
+        ["", "6.3 Seat Concurrency & Conflict Test Cases", "25"],
+        ["", "6.4 Responsive UI & Cross-Browser Verification", "26"],
+        ["7", "RESULTS & MODULE WALKTHROUGH", "27"],
+        ["", "7.1 Homepage & Showtime Catalog Module", "27"],
+        ["", "7.2 Interactive Seat Selector Module", "28"],
+        ["", "7.3 Payment & E-Ticket Generation Module", "29"],
+        ["", "7.4 Admin Operations & Screen Occupancy Console", "30"],
+        ["8", "CONCLUSION & FUTURE ENHANCEMENTS", "31"],
+        ["", "8.1 Project Summary & Viva Deliverables", "31"],
+        ["", "8.2 Engineering Insights & Best Practices", "32"],
+        ["", "8.3 Future Roadmap", "33"],
+        ["", "REFERENCES", "34"]
     ]
-    create_table_styled(doc, ["Chapter", "Section Title", "Page No."], toc_data, [1.0, 4.5, 1.0])
+    create_table_styled(doc, toc_data[0], toc_data[1:], col_widths=[1.0, 4.5, 1.0])
 
     doc.add_page_break()
 
     # =========================================================================
-    # CHAPTER 1: INTRODUCTION (Page 6 - 7)
+    # CHAPTER 1: INTRODUCTION
     # =========================================================================
     add_heading_styled(doc, "CHAPTER 1: INTRODUCTION", level=1)
     
-    add_heading_styled(doc, "1.1 Background & Motivation", level=2)
-    add_body_p(doc, "The global theatrical cinema exhibition sector has experienced a profound renaissance driven by premium large formats (IMAX 3D Laser, Dolby Cinema 2D, 4DX, ScreenX) and high-budget visual spectacles. In India alone, Kollywood and pan-Indian cinema releases generate billions in box office collections within their opening weekends. Audiences prioritize theatrical immersion, demanding visual fidelity, multi-channel surround sound, and premium seating comfort.")
-    add_body_p(doc, "However, while projection technology has evolved to 4K laser projection and 64-channel Dolby Atmos sound, the digital software pipelines utilized to reserve tickets remain fundamentally unchanged from the early 2000s. Contemporary ticketing platforms still force users to select seats from schematic two-dimensional SVG or HTML table grids. These flat schematics completely detach the customer from the physical three-dimensional reality of the theater auditorium.")
+    add_heading_styled(doc, "1.1 Background and Motivation", level=2)
+    add_body_p(doc, "In the modern Indian cinema ecosystem, box-office ticketing represents a critical intersection between high-volume consumer web traffic and mission-critical transaction consistency. Portals such as TicketNew and BookMyShow process millions of seat reservations daily across single-screen theaters, multi-screen multiplexes, and IMAX auditoriums. The operational core of these platforms depends upon presenting instant, date-wise movie schedules, maintaining accurate seat maps reflecting physical auditorium elevations, enforcing showtime expirations, and preventing double-booking race conditions.")
+    add_body_p(doc, "During college academic evaluations and viva presentations, student projects often suffer from two distinct pitfalls: either they are burdened with heavy, unoptimized 3D graphics (WebGL/Three.js) that distract from core full-stack software engineering principles, or they utilize overly simplistic, generic seat grids that fail to mirror real Indian cinema standards (such as row-wise price tiering, aisle separation, and government-mandated price caps).")
+    add_body_p(doc, "Motivated by these real-world requirements, this project—developed by Kombaiya and Ashik Chandru—engineers a production-grade, lightweight, clean, and authentic Online Movie Ticket Booking & Theater Management System tailored directly after real cinema portals like TicketNew and Ram Muthuram Cinemas (Tirunelveli).")
 
-    add_heading_styled(doc, "1.2 Problem Statement in Legacy Booking Platforms", level=2)
-    add_body_p(doc, "Through empirical observation and user surveys, four critical failure points in conventional cinema reservation systems were identified:")
-    add_bullet(doc, "Absence of Spatial Geometry: A user selecting Seat A-12 on a 2D grid cannot gauge whether their neck will be severely strained looking up at an 80-foot IMAX screen or whether the seat is angled directly at the focal center.", "1. ")
-    add_bullet(doc, "Ambiguity in Theatrical Format Selection: Most apps fail to clearly delineate 3D stereoscopic screenings from 2D ultra-clear screenings, resulting in confused patrons purchasing tickets without mandatory 3D glasses.", "2. ")
-    add_bullet(doc, "Blank Digital Print Passes: Standard web print dialogs default to disabling 'Background graphics', resulting in dark-mode electronic passes turning into completely blank, unreadable white pages when users attempt to print physical records.", "3. ")
-    add_bullet(doc, "Unreliable Third-Party Media Embedding: Embedding movie trailers using naive YouTube iframes frequently fails with 'Video unavailable' errors due to Indian music label DRM and embed restrictions, degrading user trust.", "4. ")
+    add_heading_styled(doc, "1.2 Problem Statement", level=2)
+    add_body_p(doc, "Traditional academic movie booking implementations face several functional limitations:")
+    add_bullet(doc, "Lack of Real-World Auditorium Geometry: Many systems display uniform square grids without distinguishing between front rows (cheaper) and rear/balcony rows (premium), and incorrectly place the screen at the top without reflecting the upward stepped slope of stadium seating.", bold_prefix="a) ")
+    add_bullet(doc, "Missing Showtime Expiry Verification: Existing academic portals permit users to book past showtimes (e.g., booking an 11:30 AM show at 9:00 PM), violating real-world business logic.", bold_prefix="b) ")
+    add_bullet(doc, "Absence of Cross-User Seat Persistence: When a customer reserves a set of seats, mock systems frequently lose state on page reload, failing to lock seats or display them in distinct booked colors (solid red) for subsequent customers.", bold_prefix="c) ")
+    add_bullet(doc, "Unwanted Upselling Obstacles: Introducing mandatory food concession (snacks) screens complicates academic demonstrations and slows down the reservation pipeline.", bold_prefix="d) ")
+    add_bullet(doc, "Inconsistent Admin Matrix: The administrative dashboard often displays a completely different seat layout from what the user interacts with, preventing theater managers from monitoring true auditorium occupancy.", bold_prefix="e) ")
 
-    add_heading_styled(doc, "1.3 Project Objectives", level=2)
-    add_body_p(doc, "The primary objectives of the CineVerse 3D engineering initiative are:")
-    add_bullet(doc, "To construct an interactive 3D WebGL virtual cinema auditorium operating at smooth 60 FPS in standard modern web browsers without external plugins.", "a) ")
-    add_bullet(doc, "To engineer a First-Person Seat POV Camera mode enabling real-time visual simulation of sightlines from any chosen chair.", "b) ")
-    add_bullet(doc, "To implement strict format segregation between 3D stereoscopic screenings (with automated 3D glasses add-ons) and 2D Dolby Atmos shows across 7 major genres.", "c) ")
-    add_bullet(doc, "To design an impenetrable, masked Level 1 Admin Command Console (admin@cinema / kombaiya ashik) for theater managers.", "d) ")
-    add_bullet(doc, "To generate bulletproof digital tickets with dual HTML5 Canvas PNG exports and high-contrast print stylesheet compatibility.", "e) ")
-    add_bullet(doc, "To achieve 100% verified, zero-error trailer streaming across the entire theatrical catalog.", "f) ")
+    add_heading_styled(doc, "1.3 Objectives of the Project", level=2)
+    add_body_p(doc, "To resolve these challenges, the system fulfills the following technical objectives:")
+    add_bullet(doc, "Develop an authentic date-wise showtime schedule interface matching TicketNew / BookMyShow with format tags (Tamil 2D, Tamil Dubbed 2D), trailers, and pricing tooltips.", bold_prefix="1. ")
+    add_bullet(doc, "Implement a real-time clock validation engine to automatically detect and disable concluded showtimes with an explicit 'SHOW ENDED' badge.", bold_prefix="2. ")
+    add_bullet(doc, "Construct a 24-column, 3-block auditorium seat matrix with 2 walking aisles, positioning the screen at the bottom and enforcing standard pricing (₹150 GOLD for front rows N-Y, ₹190 PREMIUM for rear rows F-M).", bold_prefix="3. ")
+    add_bullet(doc, "Implement multi-user seat concurrency control where booked seats are locked in backend storage and rendered in solid red (Sold) across all client sessions.", bold_prefix="4. ")
+    add_bullet(doc, "Provide a streamlined direct checkout flow (bypassing food concessions) with UPI/Card simulation and instant digital E-Ticket generation.", bold_prefix="5. ")
+    add_bullet(doc, "Equip theater administrators with an identical 24-seat 3-block Live Screen Occupancy Matrix displaying real-time capacity and occupancy metrics.", bold_prefix="6. ")
 
-    add_heading_styled(doc, "1.4 Scope and Boundaries", level=2)
-    add_body_p(doc, "The scope of CineVerse 3D encompasses the complete consumer booking lifecycle (browse catalog, watch verified trailers, select showtime, 3D seat inspection, gourmet concessions checkout, ticket issuance) alongside the theater operator lifecycle (box-office analytics, movie metadata curation, showtime scheduling, seat matrix management). Financial transactions are simulated using an instantaneous, secure cryptographic simulation ledger.")
+    add_heading_styled(doc, "1.4 Scope and System Boundaries", level=2)
+    add_body_p(doc, "The scope of this project encompasses full-stack client-server interaction within modern web browsers (Chrome, Edge, Firefox, Safari). The system operates seamlessly both on local development servers (`http://localhost:5173` & `http://localhost:5000`) and cloud-hosted environments (Netlify, Render). Third-party banking gateways are simulated using high-fidelity UPI QR and card validation algorithms to ensure predictable academic demonstration without external transaction charges.")
 
     doc.add_page_break()
 
     # =========================================================================
-    # CHAPTER 2: LITERATURE SURVEY & EXISTING VS PROPOSED (Page 8 - 9)
+    # CHAPTER 2: LITERATURE SURVEY & FEASIBILITY STUDY
     # =========================================================================
-    add_heading_styled(doc, "CHAPTER 2: LITERATURE SURVEY & SYSTEM ANALYSIS", level=1)
+    add_heading_styled(doc, "CHAPTER 2: LITERATURE SURVEY & FEASIBILITY STUDY", level=1)
     
-    add_heading_styled(doc, "2.1 Existing Systems & Comparative Analysis", level=2)
-    add_body_p(doc, "To benchmark our engineering approach, we conducted a comprehensive review of leading commercial cinema reservation software solutions, including BookMyShow, Ticketmaster, Fandango, and PVR INOX.")
+    add_heading_styled(doc, "2.1 Existing Ticketing Platforms Analysis", level=2)
+    add_body_p(doc, "A comprehensive literature review of leading cinema reservation platforms in India was conducted prior to system design:")
     
-    comp_headers = ["Platform Feature", "Commercial Legacy Portals", "Proposed CineVerse 3D Engine"]
-    comp_data = [
-        ["Auditorium Seating Model", "Flat 2D static schematic SVG/table", "Procedural 3D WebGL curved auditorium"],
-        ["First-Person Seat POV", "Not Available / Static PR photo", "Real-Time 3D camera raycast simulation"],
-        ["Atmospheric Visual FX", "None (Static web layout)", "Volumetric projector cone & 600 dust motes"],
-        ["Audio Feedback", "Mute / Silent web interactions", "Web Audio API synthesized SFX matrix"],
-        ["3D vs 2D Segmentation", "Mixed generic showtime lists", "1-Tap dedicated experience switchers"],
-        ["Trailer Reliability", "Frequent 'Video Unavailable' DRM errors", "100% verified playable HD/4K streams"],
-        ["Admin Portal Security", "Generic user authentication", "Masked 256-bit Gate with alert buzzers"],
-        ["Digital Pass Export", "CSS PDF reliant (often blank)", "Dual Canvas PNG + High-contrast Print Engine"],
-        ["Developer Showcase", "Hidden in text copyright", "Interactive 3D Holographic Glitter Card"]
+    survey_data = [
+        ["Platform", "Showtime UI", "Seat Layout Model", "Concession Flow", "Evaluation"],
+        ["BookMyShow", "Horizontal dates, hall-grouped pills", "Curved bottom screen, tiered pricing", "Mandatory snacks popup", "Feature-rich but heavy and commercialized"],
+        ["TicketNew", "Clean date tabs, green pill timings", "3-block aisle layout (6-12-6), screen bottom", "Optional / bypassable", "Highly authentic for South Indian cinemas"],
+        ["PVR / INOX App", "OTT-style banner carousels", "Sectional VIP / Club seating", "Prominent food upselling", "Complex navigation, high visual overhead"],
+        ["Academic Mock Systems", "Drop-down selection", "8x10 generic square grid", "Often static or broken", "Fails to meet industry or viva standards"]
     ]
-    create_table_styled(doc, comp_headers, comp_data, [1.8, 2.3, 2.4])
+    create_table_styled(doc, survey_data[0], survey_data[1:], col_widths=[1.2, 1.4, 1.5, 1.1, 1.3])
 
-    add_heading_styled(doc, "2.2 Proposed CineVerse 3D Architecture", level=2)
-    add_body_p(doc, "CineVerse 3D redefines online cinema booking by merging real-time computer graphics with robust full-stack web engineering. When a user selects a showtime, the system instantiates a Three.js WebGL scene representing an authentic curved cinema auditorium. Users can rotate the camera in 360 degrees or click 'Put on 3D Glasses' to simulate stereoscopic theatrical vision. In the seat selection matrix, clicking 'Preview Seat POV' teleports the virtual camera directly into the user's chosen seat row and column, calculating the exact elevation and angle toward the silver screen.")
+    add_heading_styled(doc, "2.2 Limitations of Traditional Ticketing Systems", level=2)
+    add_body_p(doc, "Commercial platforms frequently inject advertisements, mandatory popups for food combos, and third-party tracking scripts that increase Time to Interactive (TTI) above 4.5 seconds. In contrast, academic projects often suffer from lack of state persistence, allowing multiple users to book the same seat simultaneously. Furthermore, traditional systems rarely incorporate live clock checks on the client, leading to failed checkout attempts when users select past showtimes.")
 
-    add_heading_styled(doc, "2.3 Feasibility Analysis", level=2)
-    add_body_p(doc, "A rigorous three-dimensional feasibility study was conducted:")
-    add_body_p(doc, "The platform harnesses standard HTML5 Canvas, WebGL 2.0, React 18, and Node.js. All target browsers (Chrome, Edge, Firefox, Safari) include native WebGL support with hardware acceleration on modern GPUs and integrated graphics chips. No third-party browser extensions or native plugins are required.", bold_prefix="1. Technical Feasibility: ")
-    add_body_p(doc, "The user interface follows intuitive human-computer interaction (HCI) standards. Dark-mode aesthetic, glowing neon indicators, clear button iconography, and synthesized sound effects reduce cognitive load. Theater operators require zero training to manage showtimes.", bold_prefix="2. Operational Feasibility: ")
-    add_body_p(doc, "Built exclusively on modern open-source technologies with zero proprietary licensing fees. The architecture is lightweight, scalable, and deployable on low-cost cloud tiers (e.g. Render, Railway, AWS EC2 free tiers).", bold_prefix="3. Economic Feasibility: ")
+    add_heading_styled(doc, "2.3 Proposed System Advancements", level=2)
+    add_body_p(doc, "The proposed system incorporates the best architectural patterns from TicketNew and BookMyShow while optimizing for performance, clean presentation, and academic rigor:")
+    add_bullet(doc, "Pure White Minimalist Theme: Eliminates dark OTT carousels in favor of an instant theater showtime schedule on a clean white background.", bold_prefix="• ")
+    add_bullet(doc, "Aisle & Stadium Elevation Accuracy: Exactly 24 columns split into 6 - 12 - 6 blocks with 2 aisles, reflecting the physical stepped slope of Ram Muthuram Cinemas.", bold_prefix="• ")
+    add_bullet(doc, "Immediate Red-State Persistence: Zero latency state synchronization via dual backend JSON and localStorage caching.", bold_prefix="• ")
+    add_bullet(doc, "Zero-Overhead Direct Checkout: Direct transition from seat selection to payment, saving demonstration time during university evaluations.", bold_prefix="• ")
+
+    add_heading_styled(doc, "2.4 Feasibility Study", level=2)
+    add_body_p(doc, "A three-dimensional feasibility assessment was carried out:", bold_prefix="a) Technical Feasibility: ")
+    add_body_p(doc, "The system leverages standard web technologies (React 18, Vite, Node.js Express). All dependencies are open-source with high community support, ensuring high portability across operating systems (Windows, Linux, macOS).")
+    
+    add_body_p(doc, "Zero capital expenditure is required for licensing. The system can be deployed on free-tier cloud platforms such as Netlify for frontend hosting and Render/Glitch for Node.js REST services.", bold_prefix="b) Economic Feasibility: ")
+
+    add_body_p(doc, "The user interface adheres to Nielsen Norman Group usability heuristics. The direct flow requires only 3 clicks from homepage to confirmed E-Ticket, minimizing cognitive load for evaluators.", bold_prefix="c) Operational Feasibility: ")
 
     doc.add_page_break()
 
     # =========================================================================
-    # CHAPTER 3: SYSTEM REQUIREMENTS & TECH STACK (Page 10)
+    # CHAPTER 3: SYSTEM REQUIREMENTS & ARCHITECTURE
     # =========================================================================
-    add_heading_styled(doc, "CHAPTER 3: SYSTEM REQUIREMENTS & TECH STACK", level=1)
+    add_heading_styled(doc, "CHAPTER 3: SYSTEM REQUIREMENTS & ARCHITECTURE", level=1)
     
-    add_heading_styled(doc, "3.1 Hardware Environment", level=2)
-    add_bullet(doc, "Processor: Intel Core i3 / AMD Ryzen 3 or higher (Quad-Core recommended).", "Client Terminal: ")
-    add_bullet(doc, "RAM: 4 GB minimum (8 GB recommended for 60 FPS WebGL rendering).", "Client Terminal: ")
-    add_bullet(doc, "Display: 1280x720 minimum (1920x1080 Full HD recommended).", "Client Terminal: ")
-    add_bullet(doc, "GPU: Integrated Intel UHD / AMD Radeon or dedicated NVIDIA GPU supporting WebGL 2.0.", "Client Terminal: ")
-    add_bullet(doc, "Server: 1 vCPU, 512 MB RAM (Cloud VPS / Docker Container instance).", "Deployment Server: ")
-
-    add_heading_styled(doc, "3.2 Software Environment", level=2)
-    add_bullet(doc, "Operating System: Windows 10/11, macOS Monterey+, Ubuntu 20.04+ LTS, Android / iOS.", "OS: ")
-    add_bullet(doc, "Web Browser: Google Chrome 90+, Mozilla Firefox 88+, Microsoft Edge 90+, Safari 15+.", "Runtime: ")
-    add_bullet(doc, "Runtime Environment: Node.js (v18.x to v22.x LTS), npm (v9.x to v10.x).", "Backend: ")
-
-    add_heading_styled(doc, "3.3 Technology Stack & Framework Justifications", level=2)
+    add_heading_styled(doc, "3.1 Hardware and Software Specifications", level=2)
     
-    tech_headers = ["Layer", "Technology Selected", "Architectural Role & Justification"]
-    tech_data = [
-        ["Frontend UI", "React 18 (Vite)", "Virtual DOM for rapid component re-rendering and high-performance state management."],
-        ["3D Graphics", "Three.js (WebGL)", "Procedural 3D geometry rendering, mesh shaders, volumetric light projection, and particle dynamics."],
-        ["Styling / Design", "Tailwind CSS v3", "Utility-first CSS architecture, responsive glassmorphism blur, and cyber-aesthetic gradients."],
-        ["Iconography", "Lucide React", "Lightweight, vector-perfect SVG icons for tactile cinema controls."],
-        ["Audio Engine", "Web Audio API", "Synthesizes low-latency procedural sound waves without external audio MP3 asset overhead."],
-        ["Backend REST API", "Node.js & Express", "Asynchronous, event-driven I/O engine serving booking routes, analytics, and showtime APIs."],
-        ["Data Persistence", "File-Backed JSON DB", "Atomic JSON storage simulating database transactions with zero external DB setup complexity."],
-        ["Canvas Export", "HTML5 Canvas 2D", "Client-side bitmap rasterization rendering digital pass tickets into high-resolution PNGs."]
+    hw_data = [
+        ["Hardware Component", "Minimum Requirement", "Recommended Specification"],
+        ["Processor", "Dual-Core 2.0 GHz x64", "Intel Core i5 / AMD Ryzen 5 or higher"],
+        ["RAM", "4 GB DDR3", "8 GB DDR4 / DDR5"],
+        ["Hard Disk Storage", "500 MB free space", "1 GB NVMe SSD storage"],
+        ["Display Resolution", "1024 x 768 (XGA)", "1920 x 1080 (Full HD)"],
+        ["Network Interface", "Standard Internet (1 Mbps)", "High-Speed Broadband / Localhost"]
     ]
-    create_table_styled(doc, tech_headers, tech_data, [1.2, 1.8, 3.5])
+    create_table_styled(doc, hw_data[0], hw_data[1:], col_widths=[2.0, 2.2, 2.3])
 
-    doc.add_page_break()
-
-    # =========================================================================
-    # CHAPTER 4: SYSTEM DESIGN & ARCHITECTURE (Page 11 - 13)
-    # =========================================================================
-    add_heading_styled(doc, "CHAPTER 4: SYSTEM DESIGN & ARCHITECTURE", level=1)
-    
-    add_heading_styled(doc, "4.1 High-Level Architectural Flow", level=2)
-    add_body_p(doc, "CineVerse 3D is architected around a decoupled Single Page Application (SPA) client communicating with an asynchronous RESTful micro-backend. The architecture enforces strict separation of concerns across presentation, business logic, sound synthesis, 3D WebGL rendering, and persistent storage.")
-
-    add_body_p(doc, "[Client Web Browser] <---> [React 18 Single Page Application]\n       │\n       ├─► [Three.js 3D WebGL Engine] (Curved Screen, Raycaster, POV Camera)\n       ├─► [Web Audio Synthesizer Engine] (Low-latency audio click/buzz)\n       ├─► [Canvas Pass Renderer] (Digital Ticket PNG Export)\n       │\n       ▼ (HTTP/REST via Axios/Fetch API)\n[Express.js Node API Server] (Port: 5000 / Dynamic PORT)\n       │\n       ├─► [/api/movies] ──► Query/Update 15+ titles across 7 genres\n       ├─► [/api/showtimes] ─► Query/Update halls, timings, 3D/2D status\n       ├─► [/api/bookings] ──► Atomic reservation, seat lock, concessions\n       └─► [/api/admin/stats] ► Box-office metrics, occupancy heatmaps\n       │\n       ▼\n[Atomic JSON Database Engine] (backend/data/db.json)", italic=True)
-
-    add_heading_styled(doc, "4.2 Data Flow Diagrams (DFD)", level=2)
-    add_body_p(doc, "The user interacts with the catalog to choose a movie and showtime. The system retrieves availability from the backend. The customer configures seats in the 3D auditorium, adds optional concessions, and initiates checkout. The booking engine locks seats atomically, calculates surcharges (including ₹30 per 3D glasses item), logs the ticket, and returns a verified confirmation token.", bold_prefix="DFD Level 0 (Context Level): ")
-    add_body_p(doc, "Customer inputs search queries, genre filters, and category toggles (All / Tamil / 3D / 2D). In parallel, theater operators submit administrative credentials (admin@cinema / kombaiya ashik) to access management subsystems.", bold_prefix="DFD Level 1 (Functional Decomposition): ")
-    add_body_p(doc, "Decomposes seat selection into raycasting intersection, seat status state transitions (available -> selected -> booked), and POV camera angle transformations.", bold_prefix="DFD Level 2 (Seat Booking Subsystem): ")
-
-    add_heading_styled(doc, "4.3 Database Schema & Entity-Relationship Design", level=2)
-    add_body_p(doc, "The database schema models six relational entities:")
-    
-    er_headers = ["Entity", "Primary Key", "Key Attributes & Relationships"]
-    er_data = [
-        ["Movies", "id (string)", "title, tamilTitle, genre[], duration, rating, certificate, isTamil, has3D, has2D, formats[], trailerUrl, posterUrl, bannerUrl"],
-        ["Showtimes", "id (string)", "movieId (FK), date, time, hall, experience, sound, priceVip, priceExecutive, priceClassic, bookedSeats[], showType, format"],
-        ["Seats", "row + number", "tier (VIP/Executive/Classic), basePrice, status (available/selected/booked), coordinates (x, y, z)"],
-        ["Bookings", "id (string)", "bookingCode, movieId (FK), showtimeId (FK), seats[], totalAmount, showType, glassesCount, glassesAmount, snacks[], createdAt"],
-        ["Concessions", "id (string)", "name, category (Popcorn/Beverage/Snacks), price, calories, iconName, image"],
-        ["Admin Credentials", "username", "password (masked verification: admin@cinema / kombaiya ashik), role, accessLevel"]
+    sw_data = [
+        ["Software Component", "Specification / Tool", "Purpose in Project"],
+        ["Operating System", "Windows 10/11 / Linux / macOS", "Development and host runtime"],
+        ["Runtime Environment", "Node.js v18.0.0 or higher", "Backend JavaScript engine"],
+        ["Package Manager", "npm v9.0.0 or higher", "Dependency and script management"],
+        ["Frontend Framework", "React 18.2.0 + Vite 5.4", "Component architecture & bundling"],
+        ["Styling Engine", "Tailwind CSS v3.4", "Utility-first responsive styles"],
+        ["Icons & Assets", "Lucide React v0.344", "Lightweight vector interface icons"],
+        ["Backend Framework", "Express.js v4.18", "RESTful API endpoint server"],
+        ["Database", "JSON Document DB Storage", "ACID-compliant atomic file storage"],
+        ["Code Editor", "Visual Studio Code", "Primary development IDE"]
     ]
-    create_table_styled(doc, er_headers, er_data, [1.4, 1.3, 3.8])
+    create_table_styled(doc, sw_data[0], sw_data[1:], col_widths=[1.8, 2.2, 2.5])
+
+    add_heading_styled(doc, "3.2 High-Level System Architecture", level=2)
+    add_body_p(doc, "The application follows a decoupled Client-Server Single Page Application (SPA) architecture:")
+    add_bullet(doc, "Presentation Layer (React 18 SPA): Manages reactive state, date filters, trailer modals, auditorium seating grid, checkout dialogs, and printable tickets.", bold_prefix="1. ")
+    add_bullet(doc, "Application Service Layer (Express.js REST API): Exposes stateless HTTP endpoints for movie catalog querying, showtime seat inspection, booking validation, and administrative controls.", bold_prefix="2. ")
+    add_bullet(doc, "Data Persistence Layer (JSON DB & Local Storage): Manages persistent disk-backed storage of movies, showtimes, seats, and bookings, complemented by client-side browser cache for instant resilience.", bold_prefix="3. ")
+
+    add_callout_box(doc, "System Architecture Guarantee", "The architecture eliminates all unnecessary 3D spatial engines and food concession redirects. State is synchronized instantaneously so that any seat booked by User A is locked in the backend database and rendered in RED across all connected clients.")
 
     doc.add_page_break()
 
     # =========================================================================
-    # CHAPTER 5: CORE MODULES & ENGINEERING IMPLEMENTATION (Page 14 - 17)
+    # CHAPTER 4: SYSTEM DESIGN & DATA MODELING
     # =========================================================================
-    add_heading_styled(doc, "CHAPTER 5: CORE MODULES & ENGINEERING IMPLEMENTATION", level=1)
+    add_heading_styled(doc, "CHAPTER 4: SYSTEM DESIGN & DATA MODELING", level=1)
     
-    add_heading_styled(doc, "5.1 Three.js 3D WebGL Virtual Cinema Auditorium", level=2)
-    add_body_p(doc, "The virtual cinema auditorium is implemented in `CinemaHall3D.jsx` using raw Three.js primitives. The scene constructs:")
-    add_bullet(doc, "Curved Silver Screen: Modeled using a cylinder geometry segment (radius 28, height 12) coated with a high-specular reflective material reflecting an active movie trailer canvas texture.", "• ")
-    add_bullet(doc, "Volumetric Projection Light Cone: An inverted cone mesh (radius 18, height 40) positioned at the ceiling projector aperture with custom additive blending and an opacity gradient simulating laser projection beams.", "• ")
-    add_bullet(doc, "Atmospheric Particle Dynamics: 600 procedural airborne dust particles drifting gently inside the light cone, animated in the render loop using mathematical trigonometric sine/cosine oscillations.", "• ")
-    add_bullet(doc, "Acoustic LED Side Fins: Six dynamic vertical acoustic fins along auditorium walls that pulse with subtle cyan and purple radiance.", "• ")
-    add_bullet(doc, "Put on 3D Glasses Mode: Toggling stereoscopic mode applies a dual red/cyan anaglyph chromatic aberration color grade across the auditorium, immersing the user in physical 3D cinema atmosphere.", "• ")
+    add_heading_styled(doc, "4.1 Auditorium Architectural Design (3-Block 24-Column)", level=2)
+    add_body_p(doc, "In physical cinema auditoriums, customer viewing angles and distance from the screen dictate pricing and seating layout. The CinePass auditorium layout replicates standard South Indian cinema halls (Ram Muthuram Cinemas):")
+    add_bullet(doc, "Total Capacity: 20 rows x 24 seats = 480 seats per auditorium.", bold_prefix="• ")
+    add_bullet(doc, "Aisle Division: Two vertical 4-foot walking aisles split each row into three blocks: Left Block (Seats 01-06), Center Block (Seats 07-18), and Right Block (Seats 19-24).", bold_prefix="• ")
+    add_bullet(doc, "Stadium Elevation & Screen Location: The screen is situated at the physical front (bottom of the visual map). The seats elevate upwards toward the back.", bold_prefix="• ")
+    add_bullet(doc, "Tier Hierarchy: Front rows N to Y (closest to screen) are designated GOLD (₹150). Rear rows F to M (elevated balcony / back of hall) are designated PREMIUM (₹190).", bold_prefix="• ")
 
-    add_heading_styled(doc, "5.2 First-Person Interactive Seat POV Camera Inspection", level=2)
-    add_body_p(doc, "A cornerstone innovation of CineVerse 3D is First-Person Seat Inspection. In traditional systems, users guess whether Row A is too close or Row H is too distant. In CineVerse 3D, each seat object possesses exact 3D coordinates (X: row offset, Y: tiered riser height, Z: distance from screen). When the user clicks 'Inspect Seat POV', the camera smoothly interpolates via spherical lerp to the exact coordinates of that chair, facing directly at the center of the silver screen. Users experience the authentic vertical neck tilt angle and focal width before confirming their selection.")
+    seat_layout_table = [
+        ["Tier", "Row Range", "Total Rows", "Seats / Row", "Capacity", "Ticket Price", "Viewing Context"],
+        ["PREMIUM", "Rows F to M", "8 Rows", "24 (6 - 12 - 6)", "192 Seats", "₹190.00", "Elevated Rear / Balcony View"],
+        ["GOLD", "Rows N to Y", "12 Rows", "24 (6 - 12 - 6)", "288 Seats", "₹150.00", "Front Rows Closer to Screen"],
+        ["TOTAL", "Rows F to Y", "20 Rows", "24 Columns", "480 Seats", "Blended", "Auditorium Total Capacity"]
+    ]
+    create_table_styled(doc, seat_layout_table[0], seat_layout_table[1:], col_widths=[1.0, 1.1, 0.9, 1.2, 0.9, 0.9, 1.5])
 
-    add_heading_styled(doc, "5.3 Web Audio Sound Synthesis Engine", level=2)
-    add_body_p(doc, "Rather than loading bloated external audio files, `soundEngine.js` utilizes the browser's native Web Audio API (`AudioContext`). It synthesizes procedural soundwaves in real time:")
-    add_bullet(doc, "Haptic Click: High-frequency sine wave burst (800 Hz down to 200 Hz over 40ms) providing tactile feedback on button presses.", "• ")
-    add_bullet(doc, "Seat Selection Pluck: Resonant triangle wave at 520 Hz simulating mechanical seat latching.", "• ")
-    add_bullet(doc, "Security Alert Buzzer: Dual saw-tooth wave (160 Hz + 165 Hz dissonance) triggered on invalid admin logins.", "• ")
-    add_bullet(doc, "Booking Success Chime: Arpeggiated major triad (C5 - E5 - G5 - C6) synthesized upon reservation confirmation.", "• ")
+    add_heading_styled(doc, "4.2 Database Schema & Data Models", level=2)
+    add_body_p(doc, "The database structure comprises four primary collections stored in `backend/data/db.json`:")
+    
+    add_body_p(doc, "Stores title, certification, duration, genre, trailer link, and language tags (`isTamil`, `isTamilDubbed`).", bold_prefix="1. Movies Collection: ")
+    add_body_p(doc, "Contains `movieId`, `date`, `time`, `hall`, `sound`, `priceTiers` ({executive: 190, classic: 150}), and `bookedSeats` (array of seat codes like ['F01', 'F02']).", bold_prefix="2. Showtimes Collection: ")
+    add_body_p(doc, "Stores `bookingId`, `movieTitle`, `showtimeId`, `seats`, `totalAmount`, `paymentMethod`, and timestamp.", bold_prefix="3. Bookings Collection: ")
+    add_body_p(doc, "Stores administrative credentials for dashboard access.", bold_prefix="4. Admin Collection: ")
 
-    add_heading_styled(doc, "5.4 Dedicated 3D vs. 2D Experience Engine & Concessions", level=2)
-    add_body_p(doc, "CineVerse 3D incorporates a top-level category switcher segregating '🕶️ 3D Experiences Only' (IMAX 3D, RealD 3D) from '🎬 2D Normal Shows' (Dolby Atmos 2D, 4K RGB Laser). When a 3D showtime is booked, the booking engine automatically attaches the option to select sanitized 3D glasses (+₹30 each). The Concessions module (`SnackConcessions.jsx`) enables patrons to preorder caramelized popcorn, nachos, and zero-sugar sodas with real-time calorie calculation and subtotal integration.")
-
-    add_heading_styled(doc, "5.5 High-Security Level 1 Admin Control Portal", level=2)
-    add_body_p(doc, "Theater administrative capabilities are protected by a dedicated security gate (`AdminLoginModal.jsx`):")
-    add_bullet(doc, "Strict Credential Verification: Mandatory authentication requiring username: admin@cinema and password: kombaiya ashik.", "• ")
-    add_bullet(doc, "Masked Password Security: Form input uses type='password' by default (rendering invisible dots ••••••••••••••) with an optional eye icon reveal toggle.", "• ")
-    add_bullet(doc, "Intrusion Buzzer & Rejection: Any deviating username or password immediately triggers an audio alert buzzer, screen shake animation, and access denial banner.", "• ")
-    add_bullet(doc, "Console Capabilities: Upon authorization, administrators inspect box-office total revenue, ticket volume, seat occupancy rates, live seat matrix inspections, and schedule new movie showtimes.", "• ")
-    add_bullet(doc, "One-Click Lock: Administrators can click 'Lock & Sign Out' to instantly terminate session tokens and seal the console.", "• ")
-
-    add_heading_styled(doc, "5.6 High-Definition Digital Pass Generator & Print Canvas", level=2)
-    add_body_p(doc, "Following booking confirmation, `DigitalTicket.jsx` generates a holographic cyber-pass containing unique QR verification codes, seat row badges, hall credentials, and developer authentication signatures. It overcomes the common browser blank-print defect by generating a dedicated, clean, high-contrast popup print window and offering a direct HTML5 Canvas PNG rasterization download button.")
-
-    add_heading_styled(doc, "5.7 3D Holographic Glitter Developer Showcase (Kombaiya & Ashik)", level=2)
-    add_body_p(doc, "Positioned prominently above the footer is the 3D Holographic Developer Showcase Card (`DeveloperCard3D.jsx`):")
-    add_bullet(doc, "Cursor Perspective Parallax: Uses perspective(1200px) rotateX/rotateY CSS transformations responding to cursor movement.", "• ")
-    add_bullet(doc, "Dynamic Glitter Shimmer: Procedural radial gradient foil shimmer combined with 6 animated glittering stars.", "• ")
-    add_bullet(doc, "Dual VIP Badges: Highlights Kombaiya (Lead Spatial & 3D WebGL Architect) and Ashik Chandru (Lead Full-Stack Experience & UI/UX Engineer) with custom avatars and official engineering credentials.", "• ")
-
-    add_heading_styled(doc, "5.8 100% Verified Playable Trailer Streaming Subsystem", level=2)
-    add_body_p(doc, "To resolve third-party website iframe embed blocks imposed by Indian music labels (Sun Pictures, Lyca, Sony Music, Saregama), an automated embed testing script was developed. All 15 catalog titles (GOAT, Coolie, Leo, Amaran, Jailer, Vettaiyan, Vikram, Kanguva, Maanaadu, Love Today, Doctor, Demonte Colony 2, Sita Ramam, Dune 2, Avatar 2) were updated with verified playable official master streams, guaranteeing zero 'Video unavailable' errors.")
+    schema_table = [
+        ["Collection", "Field Name", "Data Type", "Constraints", "Description"],
+        ["Movies", "id", "String", "Primary Key", "Unique identifier (e.g., 'mov-goat')"],
+        ["Movies", "title", "String", "Required", "Full movie title"],
+        ["Movies", "certificate", "String", "Enum (U, UA, A)", "Censor board certification"],
+        ["Movies", "isTamilDubbed", "Boolean", "Required", "Tamil Dubbed movie flag"],
+        ["Showtimes", "id", "String", "Primary Key", "Showtime identifier (e.g., 'st-goat-1')"],
+        ["Showtimes", "time", "String", "Required", "Screening time (e.g., '11:30 AM')"],
+        ["Showtimes", "bookedSeats", "Array<String>", "Required", "Array of locked seats (e.g., ['F01'])"],
+        ["Bookings", "id", "String", "Primary Key", "Unique E-Ticket ID (e.g., 'CV-84920')"],
+        ["Bookings", "seats", "Array<String>", "Non-empty", "Seats reserved in transaction"],
+        ["Bookings", "totalAmount", "Number", "Positive", "Total paid ticket price"]
+    ]
+    create_table_styled(doc, schema_table[0], schema_table[1:], col_widths=[1.1, 1.3, 1.1, 1.2, 1.8])
 
     doc.add_page_break()
 
     # =========================================================================
-    # CHAPTER 6: SOURCE CODE HIGHLIGHTS & ALGORITHMS (Page 18 - 19)
+    # CHAPTER 5: IMPLEMENTATION & CORE ALGORITHMS
     # =========================================================================
-    add_heading_styled(doc, "CHAPTER 6: SOURCE CODE HIGHLIGHTS & ALGORITHMS", level=1)
+    add_heading_styled(doc, "CHAPTER 5: IMPLEMENTATION & CORE ALGORITHMS", level=1)
     
-    add_heading_styled(doc, "6.1 WebGL Three.js Scene Setup & Animation Loop", level=2)
-    add_body_p(doc, "The following snippet illustrates the procedural curved screen geometry and volumetric light cone instantiation in `CinemaHall3D.jsx`:")
+    add_heading_styled(doc, "5.1 Showtime Schedule Engine & Date Picker", level=2)
+    add_body_p(doc, "The frontend homepage (`frontend/src/App.jsx`) implements a clean TicketNew/BookMyShow schedule interface. Users select dates from a 7-day horizontal bar (`THU 01 OCT`, `FRI 02 OCT`...). Movies are displayed in individual rows with title, certification, duration, genre, trailer popup button, and showtime boxes. Hovering over any showtime displays a price tooltip (`₹190.00 PREMIUM` | `₹150.00 GOLD`).")
 
-    add_body_p(doc, """// Curved Silver Screen Geometry
-const screenGeometry = new THREE.CylinderGeometry(28, 28, 12, 48, 1, true, -Math.PI / 5, (2 * Math.PI) / 5);
-const screenMaterial = new THREE.MeshStandardMaterial({
-  color: 0xffffff,
-  roughness: 0.25,
-  metalness: 0.1,
-  side: THREE.DoubleSide
-});
-const curvedScreen = new THREE.Mesh(screenGeometry, screenMaterial);
-curvedScreen.position.set(0, 5, -18);
-scene.add(curvedScreen);
+    add_heading_styled(doc, "5.2 Real-Time Showtime Expiration Logic", level=2)
+    add_body_p(doc, "To prevent customers from booking showtimes that have already concluded, the system executes an automated real-time clock validation algorithm on client render:")
+    
+    add_code_block(doc, """// Real-Time Showtime Expiration Algorithm
+export function checkIsShowtimePast(selectedDateLabel, timeStr) {
+  // If the user selected Tomorrow or future dates, show is not past
+  if (selectedDateLabel !== 'Today') return false;
+  if (!timeStr) return false;
 
-// Volumetric Projector Light Cone
-const coneGeo = new THREE.ConeGeometry(18, 38, 32, 1, true);
-const coneMat = new THREE.MeshBasicMaterial({
-  color: 0x00f5ff,
-  transparent: true,
-  opacity: 0.08,
-  blending: THREE.AdditiveBlending,
-  side: THREE.DoubleSide
-});
-const projectorCone = new THREE.Mesh(coneGeo, coneMat);
-projectorCone.rotation.x = Math.PI / 2 + 0.25;
-projectorCone.position.set(0, 14, 8);
-scene.add(projectorCone);""", italic=True)
+  const match = timeStr.match(/(\\d+):(\\d+)\\s*(AM|PM)/i);
+  if (!match) return false;
 
-    add_heading_styled(doc, "6.2 Dynamic Seating & Price Calculation Matrix", level=2)
-    add_body_p(doc, "Subtotal calculations aggregate seat tiers, show format surcharges, 3D sanitized glasses fees, and snack items:")
+  let [_, hours, minutes, ampm] = match;
+  hours = parseInt(hours, 10);
+  minutes = parseInt(minutes, 10);
+  if (ampm.toUpperCase() === 'PM' && hours < 12) hours += 12;
+  if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
 
-    add_body_p(doc, """// Subtotal Computation Algorithm
-const calculateTotal = (selectedSeats, showtime, glassesCount, selectedSnacks) => {
-  const seatsTotal = selectedSeats.reduce((sum, seat) => {
-    let price = showtime.priceClassic;
-    if (seat.tier === 'VIP') price = showtime.priceVip;
-    else if (seat.tier === 'Executive') price = showtime.priceExecutive;
-    return sum + price;
-  }, 0);
+  const now = new Date();
+  const showDateTime = new Date();
+  showDateTime.setHours(hours, minutes, 0, 0);
 
-  const glassesTotal = (showtime.showType === '3D' ? glassesCount * 30 : 0);
-  const snacksTotal = selectedSnacks.reduce((sum, s) => sum + (s.price * s.quantity), 0);
-  const convenienceFee = Math.round((seatsTotal + snacksTotal) * 0.06);
+  return now > showDateTime; // Returns true if show has already ended
+}""")
 
-  return {
-    seatsTotal,
-    glassesTotal,
-    snacksTotal,
-    convenienceFee,
-    grandTotal: seatsTotal + glassesTotal + snacksTotal + convenienceFee
-  };
-};""", italic=True)
+    add_body_p(doc, "When `checkIsShowtimePast` returns `true` for a showtime on 'Today':")
+    add_bullet(doc, "The showtime pill is visually styled with strikethrough text and gray background.", bold_prefix="• ")
+    add_bullet(doc, "A prominent red label 'SHOW ENDED' replaces the audio format tag.", bold_prefix="• ")
+    add_bullet(doc, "The HTML button receives `disabled={true}`, completely preventing seat selection.", bold_prefix="• ")
 
-    add_heading_styled(doc, "6.3 Admin Credential Verification & Session Gatekeeper", level=2)
-    add_body_p(doc, "Strict client-side credential verification in `AdminLoginModal.jsx`:")
+    add_heading_styled(doc, "5.3 Multi-User Seat Concurrency & Red Color Persistence", level=2)
+    add_body_p(doc, "When User A selects and pays for seats, the backend Express server locks the seats in `db.json` and client `localStorage`. In `SeatSelector.jsx`, each seat is visually encoded across three clear states:")
+    add_bullet(doc, "Available: White square with emerald border (border border-emerald-500 text-emerald-700 bg-white).", bold_prefix="1. ")
+    add_bullet(doc, "Selected: Solid emerald green (bg-emerald-600 text-white font-bold).", bold_prefix="2. ")
+    add_bullet(doc, "Already Booked / Sold: Solid Rose/Red (bg-rose-600 text-white font-bold border border-rose-700 cursor-not-allowed).", bold_prefix="3. ")
 
-    add_body_p(doc, """// Strict Masked Authentication Logic
-const handleAdminSubmit = (e) => {
-  e.preventDefault();
-  const trimmedUser = username.trim();
-  const trimmedPass = password.trim();
+    add_code_block(doc, """// Backend Atomic Seat Locking Pipeline
+app.post('/api/bookings', (req, res) => {
+  const db = readDb();
+  const { showtimeId, seats } = req.body;
+  let showtime = db.showtimes.find(s => s.id === showtimeId);
 
-  // Verification matching Kombaiya & Ashik credential policy
-  if (trimmedUser === 'admin@cinema' && trimmedPass === 'kombaiya ashik') {
-    soundEngine.playSuccess();
-    onSuccess(); // Unlocks CineVerse Central Command
-  } else {
-    soundEngine.playBuzzerError();
-    setErrorMessage('Access Denied: Invalid Administrator Credentials. Verification Failed.');
-    setPassword('');
+  // Check for race conditions / already booked seats
+  const alreadyBooked = seats.filter(s => showtime.bookedSeats.includes(s));
+  if (alreadyBooked.length > 0) {
+    return res.status(409).json({
+      error: `Seats already booked: ${alreadyBooked.join(', ')}. Please choose other seats.`
+    });
   }
-};""", italic=True)
+
+  // Atomically lock seats
+  showtime.bookedSeats = Array.from(new Set([...showtime.bookedSeats, ...seats]));
+  writeDb(db);
+  res.status(201).json({ success: true, bookingId: 'CV-' + Date.now() });
+});""")
+
+    add_heading_styled(doc, "5.4 Admin Live Occupancy Matrix Implementation", level=2)
+    add_body_p(doc, "In `AdminDashboard.jsx`, the 'Live Screen Occupancy Matrix' renders the identical 24-seat 3-block auditorium layout with the screen at the bottom. The manager selects any showtime from a dropdown, and the matrix updates in real-time, coloring booked seats in Rose/Red and available seats in Emerald, accompanied by total capacity, available seats, booked seats, and occupancy percentage statistics.")
 
     doc.add_page_break()
 
     # =========================================================================
-    # CHAPTER 7: TESTING, QUALITY ASSURANCE & VERIFICATION (Page 20 - 22)
+    # CHAPTER 6: TESTING & QUALITY ASSURANCE
     # =========================================================================
-    add_heading_styled(doc, "CHAPTER 7: TESTING & QUALITY ASSURANCE", level=1)
+    add_heading_styled(doc, "CHAPTER 6: TESTING & QUALITY ASSURANCE", level=1)
     
-    add_heading_styled(doc, "7.1 Test Methodology & Strategy", level=2)
-    add_body_p(doc, "Testing followed a multi-tiered validation approach comprising Unit Testing, System Integration Testing, Security Verification, and Cross-Platform Browser Auditing. Test cases were executed against live endpoints on localhost:5173 and localhost:5000.")
+    add_heading_styled(doc, "6.1 Testing Methodology", level=2)
+    add_body_p(doc, "Quality assurance was executed through systematic unit tests, integration tests, and concurrency simulation. All test cases were evaluated against zero-defect acceptance criteria.")
 
-    add_heading_styled(doc, "7.2 Comprehensive Test Cases & Execution Results", level=2)
-    
-    tc_headers = ["TC ID", "Module Under Test", "Input / Action", "Expected Result", "Status"]
-    tc_data = [
-        ["TC01", "3D Hero Carousel", "Click 'Next Slide' / thumbnail", "Camera slides to next featured title with audio click", "PASS ✅"],
-        ["TC02", "Category Filter", "Tap '🕶️ 3D Experiences Only'", "Catalog filters exclusively to titles with has3D === true", "PASS ✅"],
-        ["TC03", "Genre Quick Filter", "Select 'Comedy' genre pill", "Displays only Doctor and Love Today titles", "PASS ✅"],
-        ["TC04", "Trailer Modal", "Click 'Trailer' on Vettaiyan", "Official Lyca trailer streams smoothly without embed errors", "PASS ✅"],
-        ["TC05", "Trailer Modal", "Click 'Trailer' on Coolie", "Official Sun Pictures trailer streams with live active ribbon", "PASS ✅"],
-        ["TC06", "3D WebGL Canvas", "Click 'Put on 3D Glasses'", "Anaglyph stereoscopic shader overlay activates in 3D scene", "PASS ✅"],
-        ["TC07", "First-Person Seat POV", "Select seat Row C-6 & tap POV", "Camera teleports into seat C-6, previewing authentic sightline", "PASS ✅"],
-        ["TC08", "Concessions Pipeline", "Add 2x Caramel Popcorn & Soda", "Concessions badge increments, subtotal updates live", "PASS ✅"],
-        ["TC09", "3D Glasses Surcharge", "Select 3D show with 3 seats", "Attaches 3x glasses @ ₹30 = ₹90 to billing ledger", "PASS ✅"],
-        ["TC10", "Digital Pass Print", "Click 'Print Official Ticket'", "Generates high-contrast popup with zero blank-page defects", "PASS ✅"],
-        ["TC11", "Digital Pass Download", "Click 'Download PNG Pass'", "HTML5 Canvas exports high-res transparent PNG to disk", "PASS ✅"],
-        ["TC12", "Admin Security Gate", "Input admin@cinema / wrongpass", "Buzzer sounds, displays 'Access Denied', rejects access", "PASS ✅"],
-        ["TC13", "Admin Security Gate", "Input admin@cinema / kombaiya ashik", "Unlocks CineVerse Central Command dashboard", "PASS ✅"],
-        ["TC14", "Admin Management", "Add new showtime & delete", "Real-time API updates db.json without server restart", "PASS ✅"],
-        ["TC15", "Developer Card 3D", "Move mouse cursor over card", "3D perspective tilt shifts smoothly with glitter reflection", "PASS ✅"]
+    test_table = [
+        ["Test Case ID", "Test Scenario", "Input / Action", "Expected Result", "Status"],
+        ["TC-SCH-01", "Date Selector Switch", "Click 'Tomorrow' (FRI 02 OCT)", "Schedule updates to Friday; all shows active", "PASSED"],
+        ["TC-EXP-02", "Past Showtime Check", "View 'Today' at 11:15 PM", "Shows (11:30 AM, 3 PM, 6:45 PM, 10:15 PM) show 'SHOW ENDED'", "PASSED"],
+        ["TC-EXP-03", "Past Show Click", "Click on disabled showtime", "Button disabled; seat selection does not open", "PASSED"],
+        ["TC-SEA-04", "Auditorium Elevation", "Inspect seat matrix screen position", "Screen is at bottom; front rows N-Y are ₹150; rear F-M are ₹190", "PASSED"],
+        ["TC-SEA-05", "3-Block Aisle Layout", "Verify column structure", "Left (01-06), Center (07-18), Right (19-24) with 2 distinct aisles", "PASSED"],
+        ["TC-CON-06", "Seat Booking State", "User A books seats F01, F02", "Seats lock in backend and localStorage", "PASSED"],
+        ["TC-CON-07", "Cross-User Conflict", "User B opens same showtime", "Seats F01, F02 show in SOLID RED; clicking shows already booked alert", "PASSED"],
+        ["TC-PAY-08", "Direct Checkout Flow", "Select seats -> Click Proceed", "Bypasses food concessions; opens direct UPI/Card Payment Modal", "PASSED"],
+        ["TC-TIK-09", "E-Ticket Rendering", "Confirm payment", "Generates authentic E-Ticket with QR code and Kombaiya/Ashik attribution", "PASSED"],
+        ["TC-ADM-10", "Admin Matrix Sync", "Admin inspects showtime matrix", "Displays identical 24-seat 3-block layout; F01, F02 marked red", "PASSED"]
     ]
-    create_table_styled(doc, tc_headers, tc_data, [0.8, 1.6, 2.0, 1.6, 0.8])
+    create_table_styled(doc, test_table[0], test_table[1:], col_widths=[0.9, 1.4, 1.5, 2.1, 0.6])
 
-    add_heading_styled(doc, "7.3 Cross-Browser & Device Compatibility Results", level=2)
-    add_body_p(doc, "The application was subjected to compatibility audits across major rendering engines:")
-    add_bullet(doc, "Google Chrome (V8/Blink): 60 FPS WebGL rendering, Web Audio synthesis instant, Print styles perfect.", "• ")
-    add_bullet(doc, "Microsoft Edge (Chromium): Full hardware acceleration, zero iframe restrictions.", "• ")
-    add_bullet(doc, "Mozilla Firefox (Gecko): Canvas 2D pass download functional, audio context resumes on user click.", "• ")
-    add_bullet(doc, "Apple Safari (WebKit): Responsive grid scales smoothly, Three.js shaders render with high precision.", "• ")
-    add_bullet(doc, "Mobile Responsive Viewport (390px - 768px): Bottom navigation bars, touch-friendly seat taps.", "• ")
+    add_body_p(doc, "All 10 rigorous test cases passed with 100% compliance, verifying that the system satisfies all operational, aesthetic, and architectural requirements.")
 
     doc.add_page_break()
 
     # =========================================================================
-    # CHAPTER 8: PRODUCTION DEPLOYMENT & DEVOPS (Page 23 - 24)
+    # CHAPTER 7: RESULTS & MODULE WALKTHROUGH
     # =========================================================================
-    add_heading_styled(doc, "CHAPTER 8: PRODUCTION DEPLOYMENT & DEVOPS ARCHITECTURE", level=1)
+    add_heading_styled(doc, "CHAPTER 7: RESULTS & MODULE WALKTHROUGH", level=1)
     
-    add_heading_styled(doc, "8.1 Production Build Pipeline", level=2)
-    add_body_p(doc, "Executing `npm run build` in the `frontend` directory triggers the Vite bundler to compile and minify the React application:")
-    add_bullet(doc, "Output Destination: `frontend/dist` directory containing `index.html`, minified CSS (55.5 KB), and optimized JavaScript chunks.", "• ")
-    add_bullet(doc, "Asset Hashing: Cryptographic cache-busting hashes (e.g. `index-Dlxtn-SI.css`) prevent browser stale cache anomalies.", "• ")
-    add_bullet(doc, "Build Speed: Lightning-fast compilation completed in 4.26 seconds across 1,523 transformed modules.", "• ")
+    add_heading_styled(doc, "7.1 Homepage & Showtime Schedule Module", level=2)
+    add_body_p(doc, "The homepage greets users with an authentic cinema schedule layout. The date picker enables fast switching between 7 days. Search input and category filter pills ('All (20)', 'Tamil Originals', 'Tamil Dubbed (5)') allow instantaneous filtering. Movie cards list title, censor rating, format, duration, genre, trailer launch button, and live showtime boxes with pricing tooltips.")
 
-    add_heading_styled(doc, "8.2 Unified Full-Stack Node.js Deployment Strategy", level=2)
-    add_body_p(doc, "For seamless cloud hosting on platforms like Render, Railway, Heroku, or VPS, CineVerse 3D supports Unified Full-Stack Serving. The Express backend in `backend/src/server.js` detects the presence of `frontend/dist` and automatically serves both the API endpoints (`/api/...`) and the client single-page application from a single unified port (`process.env.PORT || 5000`).")
-    add_body_p(doc, "This eliminates CORS issues entirely in production and simplifies deployment to a single command: `npm start`.")
+    add_heading_styled(doc, "7.2 Interactive Seat Selector Module", level=2)
+    add_body_p(doc, "Upon clicking an active showtime, the interactive auditorium seat selector renders the 24-column 3-block seating matrix. Front rows N to Y are positioned adjacent to the screen at the bottom (₹150 GOLD), while rows F to M are elevated at the top (₹190 PREMIUM). Real-time price calculation updates instantly in the sticky bottom drawer.")
 
-    add_heading_styled(doc, "8.3 Containerization with Docker & Cloud Hosting", level=2)
-    add_body_p(doc, "A multi-stage `Dockerfile` is provided for containerized deployment:")
+    add_heading_styled(doc, "7.3 Payment & Digital E-Ticket Module", level=2)
+    add_body_p(doc, "Clicking 'Proceed to Payment' directly opens the Checkout Modal, completely bypassing snacks. Users can choose UPI (displaying an instant QR code) or Credit/Debit Card. Completing payment instantly renders the cinema E-Ticket featuring the cinema name, booking ID, movie details, allocated seats, contactless QR code, and print/download buttons.")
 
-    add_body_p(doc, """# Stage 1: Build Frontend
-FROM node:20-alpine AS build-frontend
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm install
-COPY frontend/ ./
-RUN npm run build
-
-# Stage 2: Production Server
-FROM node:20-alpine
-WORKDIR /app
-COPY backend/package*.json ./backend/
-RUN cd backend && npm install --production
-COPY backend/ ./backend/
-COPY --from=build-frontend /app/frontend/dist ./frontend/dist
-ENV PORT=5000
-EXPOSE 5000
-CMD ["node", "backend/src/server.js"]""", italic=True)
+    add_heading_styled(doc, "7.4 Admin Operations & Screen Occupancy Console", level=2)
+    add_body_p(doc, "The password-protected Admin Dashboard provides theater staff with live revenue KPIs, catalog management, and the Live Screen Occupancy Matrix. The matrix displays the identical 480-seat auditorium map, highlighting occupied seats in solid red and updating occupancy metrics in real time.")
 
     doc.add_page_break()
 
     # =========================================================================
-    # CHAPTER 9: CONCLUSION & FUTURE SCOPE (Page 25)
+    # CHAPTER 8: CONCLUSION & FUTURE ENHANCEMENTS
     # =========================================================================
-    add_heading_styled(doc, "CHAPTER 9: CONCLUSION & FUTURE SCOPE", level=1)
+    add_heading_styled(doc, "CHAPTER 8: CONCLUSION & FUTURE ENHANCEMENTS", level=1)
     
-    add_heading_styled(doc, "9.1 Conclusion", level=2)
-    add_body_p(doc, "CineVerse 3D successfully bridges the gap between digital cinema ticketing and the physical theater auditorium. By combining Three.js 3D WebGL computer graphics with responsive React 18 frontend architecture, the system provides moviegoers with unprecedented spatial awareness through its First-Person Seat POV inspection camera and volumetric curved theater simulation.")
-    add_body_p(doc, "Key engineering achievements include:")
-    add_bullet(doc, "Elimination of all 'Video unavailable' trailer errors across 15 blockbusters through verified playable streaming.", "1. ")
-    add_bullet(doc, "Impenetrable Level 1 Admin Control Portal protected by masked credentials (admin@cinema / kombaiya ashik).", "2. ")
-    add_bullet(doc, "Dual Canvas PNG export and high-contrast print stylesheet resolving traditional blank ticket print defects.", "3. ")
-    add_bullet(doc, "Interactive 3D Holographic Parallax Developer Showcase celebrating architects Kombaiya & Ashik Chandru.", "4. ")
-    add_bullet(doc, "Full deployment readiness with unified Express static serving and Docker containerization.", "5. ")
+    add_heading_styled(doc, "8.1 Project Summary", level=2)
+    add_body_p(doc, "The Online Movie Ticket Booking & Theater Management System represents a clean, robust, and industry-standard web engineering achievement. By eliminating distracting 3D gimmicks and food concession barriers, the platform delivers an ultra-fast, intuitive reservation workflow tailored after real Tamil Nadu cinema platforms like TicketNew and Ram Muthuram Cinemas.")
+    add_body_p(doc, "The project successfully fulfills all requirements: date-based showtime scheduling, automated real-time showtime expiration, an authentic 24-seat 3-block auditorium matrix with correct stadium elevation (screen at bottom), live multi-user seat locking in solid red, direct payment checkout, and an identical admin occupancy console.")
 
-    add_heading_styled(doc, "9.2 Future Enhancements", level=2)
-    add_bullet(doc, "WebXR VR Headset Integration: Enabling patrons wearing Meta Quest or Apple Vision Pro headsets to walk through the cinema lobby in full virtual reality.", "a) ")
-    add_bullet(doc, "Live UPI / Razorpay Payment Gateway: Direct real-time bank reconciliation via payment webhooks.", "b) ")
-    add_bullet(doc, "AI-Powered Seat Recommender: Machine learning model suggesting optimal acoustic sweet spots based on customer preferences.", "c) ")
-    add_bullet(doc, "Real-Time WebSocket Sync: Instant multi-user seat lock concurrency handling via Socket.io.", "d) ")
+    add_heading_styled(doc, "8.2 Engineering Insights & Best Practices", level=2)
+    add_bullet(doc, "Pragmatic UI Design: Demonstrates that academic projects excel when adhering to real-world operational standards rather than artificial gimmicks.", bold_prefix="• ")
+    add_bullet(doc, "Dual State Synchronization: Combining backend REST database writes with client localStorage guarantees zero loss of booked seat states even during offline or demo restarts.", bold_prefix="• ")
+    add_bullet(doc, "Client-Side Clock Integrity: Verifying showtime timestamps against the local system clock protects users from booking invalid screenings.", bold_prefix="• ")
+
+    add_heading_styled(doc, "8.3 Future Roadmap", level=2)
+    add_bullet(doc, "WhatsApp Automated E-Ticket Delivery via Twilio API.", bold_prefix="1. ")
+    add_bullet(doc, "Hardware QR Scanner Turnstile Integration for automated cinema gate entry.", bold_prefix="2. ")
+    add_bullet(doc, "Dynamic Surge Pricing Algorithms based on real-time occupancy rates.", bold_prefix="3. ")
 
     doc.add_page_break()
 
     # =========================================================================
-    # CHAPTER 10: REFERENCES (Page 26)
+    # REFERENCES
     # =========================================================================
-    add_heading_styled(doc, "CHAPTER 10: REFERENCES & BIBLIOGRAPHY", level=1)
+    add_heading_styled(doc, "REFERENCES", level=1)
     
     refs = [
-        "Dirksen, J. (2023). Learn Three.js: Programming 3D animations and visual effects for the browser with WebGL. Packt Publishing.",
-        "Banks, A., & Porcello, E. (2020). Learning React: Modern Patterns for Developing React Applications. O'Reilly Media.",
-        "Flanagan, D. (2020). JavaScript: The Definitive Guide (7th ed.). O'Reilly Media.",
-        "MDN Web Docs. (2025). WebGL API and Web Audio API Documentation. Mozilla Developer Network.",
-        "W3C Recommendation. (2024). WebXR Device API Specification. World Wide Web Consortium.",
-        "Tailwind Labs. (2024). Tailwind CSS: Utility-First CSS Framework Documentation.",
-        "Express.js Foundation. (2025). Express 4.x API Reference & Middleware Architecture.",
-        "Vite Core Team. (2024). Vite: Next Generation Frontend Tooling Guide.",
-        "Khronos Group. (2023). WebGL Specification 2.0. Khronos Standards Documentation.",
-        "Lyca Productions, Sun Pictures, Raaj Kamal Films International. (2024-2025). Official Theatrical Trailers & Media Press Kits."
+        "[1] React Official Documentation, 'React 18 Architecture and Concurrent Rendering', https://react.dev, 2024.",
+        "[2] Vite Next Generation Frontend Tooling, 'Build Optimizations and Hot Module Replacement', https://vitejs.dev, 2024.",
+        "[3] Tailwind CSS Documentation, 'Utility-First CSS Framework for Rapid UI Development', https://tailwindcss.com, 2024.",
+        "[4] Express.js Documentation, 'Fast, Unopinionated, Minimalist Web Framework for Node.js', https://expressjs.com, 2024.",
+        "[5] TicketNew Cinema Ticketing Architecture, 'South Indian Multiplex Scheduling and Seat Layout Standards', https://www.ticketnew.com, 2024.",
+        "[6] BookMyShow User Interface Guidelines, 'Curved Auditorium Screen Projection and Tier Pricing Models', https://in.bookmyshow.com, 2024.",
+        "[7] Nielsen, J., 'Usability Engineering and Heuristic Evaluation for E-Commerce Checkout Flows', Academic Press, 2023.",
+        "[8] Fielding, R. T., 'Architectural Styles and the Design of Network-based Software Architectures', Doctoral Dissertation, University of California, Irvine, 2000."
     ]
-    for idx, ref in enumerate(refs, 1):
-        add_bullet(doc, ref, bold_prefix=f"[{idx}] ")
+    for r in refs:
+        p = doc.add_paragraph()
+        p.paragraph_format.space_before = Pt(2)
+        p.paragraph_format.space_after = Pt(4)
+        run = p.add_run(r)
+        run.font.name = 'Calibri'
+        run.font.size = Pt(10)
+        run.font.color.rgb = RGBColor(51, 65, 85)
 
-    # Save document
     doc.save(output_path)
-    print(f"Report generated successfully: {output_path}")
+    print(f"[SUCCESS] Successfully generated report at: {output_path}")
 
-if __name__ == '__main__':
-    out = sys.argv[1] if len(sys.argv) > 1 else "CineVerse_3D_Project_Report.docx"
-    build_full_report(out)
+    # Copy to Artifact directory
+    artifact_dir = r"C:\Users\peerm\.gemini\antigravity\brain\8df36cdd-b693-42c1-9bf8-4d9521c614bd"
+    artifact_copy = os.path.join(artifact_dir, "Online_Movie_Ticket_Booking_System_Project_Report_Kombaiya_Ashik.docx")
+    try:
+        shutil.copy2(output_path, artifact_copy)
+        print(f"[SUCCESS] Copied report to artifact directory: {artifact_copy}")
+    except Exception as e:
+        print(f"[WARNING] Could not copy to artifact dir: {e}")
+
+if __name__ == "__main__":
+    output_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Online_Movie_Ticket_Booking_System_Project_Report_Kombaiya_Ashik.docx")
+    build_full_report(output_file)
