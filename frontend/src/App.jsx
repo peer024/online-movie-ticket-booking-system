@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/common/Navbar';
-import Footer from './components/common/Footer';
 import TrailerModal from './components/movies/TrailerModal';
 import SeatSelector from './components/booking/SeatSelector';
 import CheckoutModal from './components/booking/CheckoutModal';
 import DigitalTicket from './components/booking/DigitalTicket';
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminLoginModal from './components/admin/AdminLoginModal';
-import ProjectCredits from './components/common/ProjectCredits';
+
 import { api } from './services/api';
 import { Search, Film, Layers, Flame, Play, ChevronRight, Info } from 'lucide-react';
 
@@ -495,8 +494,7 @@ export default function App() {
               )}
             </div>
 
-            {/* Academic Project Credits */}
-            <ProjectCredits />
+
           </div>
         ) : currentView === 'seat-selection' ? (
           <SeatSelector
@@ -542,7 +540,7 @@ export default function App() {
         />
       )}
 
-      <Footer />
     </div>
   );
 }
+

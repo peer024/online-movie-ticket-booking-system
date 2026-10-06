@@ -262,8 +262,9 @@ export default function DigitalTicket({
               </div>
 
               <div class="footer-credit">
-                Project Designed & Developed by <strong>Kombaiya & Ashik Chandru</strong>
+                CinePass Cinemas Digital Reservation System
               </div>
+
             </div>
           </div>
         </body>
@@ -395,7 +396,8 @@ export default function DigitalTicket({
       ctx.fillStyle = '#64748b';
       ctx.font = 'bold 13px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('Project Designed & Developed by Kombaiya & Ashik Chandru', 400, 900);
+      ctx.fillText('CinePass Cinemas Digital E-Ticket', 400, 900);
+
 
       // Trigger Download
       const link = document.createElement('a');
@@ -538,12 +540,9 @@ export default function DigitalTicket({
             <span className="text-xl font-bold text-slate-900">₹{booking.totalAmount.toLocaleString()}</span>
           </div>
 
-          {/* Developer Credit Footer */}
-          <div className="mt-5 pt-3 border-t border-slate-100 text-center text-[11px] text-slate-400">
-            Project Developed by <strong>Kombaiya & Ashik Chandru</strong>
-          </div>
         </div>
       </div>
+
 
       {/* Action Buttons: Print PDF & Download PNG */}
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

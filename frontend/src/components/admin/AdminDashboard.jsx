@@ -814,13 +814,11 @@ export default function AdminDashboard({ onExitAdmin, onLogout }) {
         </div>
       )}
 
-      {/* Developer Footer */}
+      {/* Footer */}
       <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500 font-mono">
-        <div>CineVerse 3D Operator Console • v2.5 Architecture</div>
-        <div className="text-slate-400">
-          Designed and Developed by <strong className="text-cyan-400 font-sans font-bold">Kombaiya & Ashik Chandru</strong>
-        </div>
+        <div>CinePass Operator Console • Theater Administration</div>
       </div>
     </div>
   );
+
 }
