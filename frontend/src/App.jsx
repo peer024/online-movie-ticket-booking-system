@@ -34,16 +34,59 @@ export default function App() {
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState(null);
 
-  // Dates for TicketNew-style horizontal date picker
-  const dateOptions = [
-    { label: 'Today', day: 'THU', date: '01', month: 'OCT' },
-    { label: 'Tomorrow', day: 'FRI', date: '02', month: 'OCT' },
-    { label: 'Sat, 03 Oct', day: 'SAT', date: '03', month: 'OCT' },
-    { label: 'Sun, 04 Oct', day: 'SUN', date: '04', month: 'OCT' },
-    { label: 'Mon, 05 Oct', day: 'MON', date: '05', month: 'OCT' },
-    { label: 'Tue, 06 Oct', day: 'TUE', date: '06', month: 'OCT' },
-    { label: 'Wed, 07 Oct', day: 'WED', date: '07', month: 'OCT' }
-  ];
+  // Dynamic Real-Time Date Generator (Automatically calculates Today + next 6 days)
+  // Past dates are automatically excluded; days dynamically progress in real-time
+  const getDynamicDateOptions = () => {
+    const daysShort = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    const monthsShort = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const list = [];
+    const today = new Date();
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+
+      const dayName = daysShort[d.getDay()];
+      const dateNum = String(d.getDate()).padStart(2, '0');
+      const monthName = monthsShort[d.getMonth()];
+      const year = d.getFullYear();
+
+      let label = 'Today';
+      let displayTag = 'TODAY';
+      if (i === 1) {
+        label = 'Tomorrow';
+        displayTag = 'TOM';
+      } else if (i > 1) {
+        label = `${dayName}, ${dateNum} ${monthName}`;
+        displayTag = dayName;
+      }
+
+      list.push({
+        id: `date-opt-${i}`,
+        key: label,
+        label,
+        displayDay: displayTag,
+        date: dateNum,
+        month: monthName,
+        year,
+        fullFormatted: `${dayName}, ${dateNum} ${monthName} ${year}`,
+        isToday: i === 0,
+        isTomorrow: i === 1
+      });
+    }
+    return list;
+  };
+
+  const [dateOptions, setDateOptions] = useState(getDynamicDateOptions);
+
+  useEffect(() => {
+    // Keep dates fresh in case user stays across midnight
+    const interval = setInterval(() => {
+      setDateOptions(getDynamicDateOptions());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
 
   const fetchData = async () => {
     try {
@@ -126,12 +169,15 @@ export default function App() {
   };
 
   const handleBookingSuccess = (booking) => {
+    const activeDateObj = dateOptions.find(d => d.key === selectedDate);
+    const bookingFullDate = activeDateObj ? activeDateObj.fullFormatted : selectedDate;
+
     const validBooking = booking?.id ? booking : (booking?.booking || {
       id: `CP-${Math.floor(10000 + Math.random() * 90000)}`,
       movieTitle: selectedMovie?.title || 'Feature Film',
       showType: '2D',
       format: selectedShowtime?.format || 'RAM - RGB ATMOS',
-      date: selectedShowtime?.date || selectedDate,
+      date: bookingFullDate,
       time: selectedShowtime?.time || '07:00 PM',
       hall: selectedShowtime?.hall || 'Audi 1',
       seats: seatBookingState?.seats || ['F10', 'F11'],
@@ -279,23 +325,30 @@ export default function App() {
                 
                 {/* Horizontal Date Picker Buttons */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-                  {dateOptions.map((d, idx) => {
-                    const isSelected = (selectedDate === 'Today' && idx === 0) ||
-                                       (selectedDate === 'Tomorrow' && idx === 1) ||
-                                       (selectedDate === d.label);
+                  {dateOptions.map((d) => {
+                    const isSelected = selectedDate === d.key;
                     return (
                       <button
-                        key={d.label}
-                        onClick={() => setSelectedDate(idx === 0 ? 'Today' : idx === 1 ? 'Tomorrow' : d.label)}
-                        className={`flex flex-col items-center justify-center min-w-[65px] px-3 py-2 rounded-xl text-center transition-all cursor-pointer ${
+                        key={d.id}
+                        onClick={() => setSelectedDate(d.key)}
+                        className={`flex flex-col items-center justify-center min-w-[68px] px-3.5 py-2 rounded-xl text-center transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-rose-600 text-white font-bold shadow-xs'
+                            ? 'bg-rose-600 text-white font-bold shadow-xs scale-102 ring-2 ring-rose-200'
                             : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200'
                         }`}
+                        title={d.fullFormatted}
                       >
-                        <span className="text-[10px] uppercase font-semibold">{d.day}</span>
-                        <span className="text-base font-black leading-tight">{d.date}</span>
-                        <span className="text-[10px] uppercase font-semibold">{d.month}</span>
+                        <span className={`text-[10px] uppercase font-bold tracking-wider ${
+                          isSelected ? 'text-rose-100' : d.isToday ? 'text-rose-600' : 'text-gray-500'
+                        }`}>
+                          {d.displayDay}
+                        </span>
+                        <span className="text-base font-black leading-tight my-0.5">{d.date}</span>
+                        <span className={`text-[10px] uppercase font-semibold ${
+                          isSelected ? 'text-rose-100' : 'text-gray-500'
+                        }`}>
+                          {d.month}
+                        </span>
                       </button>
                     );
                   })}
