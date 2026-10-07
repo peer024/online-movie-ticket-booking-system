@@ -637,7 +637,7 @@ def build_full_report(output_path):
 
     add_heading_styled(doc, "3.2 High-Level System Architecture", level=2)
     add_body_p(doc, "The application follows a decoupled Client-Server Single Page Application (SPA) architecture:")
-    add_bullet(doc, "Presentation Layer (React 18 SPA): Manages reactive state, date filters, trailer modals, auditorium seating grid, checkout dialogs, and printable tickets.", bold_prefix="1. ")
+    add_bullet(doc, "Presentation Layer (React 18 SPA): Manages reactive state, date filters, auditorium seating grid, checkout dialogs, and printable tickets.", bold_prefix="1. ")
     add_bullet(doc, "Application Service Layer (Express.js REST API): Exposes stateless HTTP endpoints for movie catalog querying, showtime seat inspection, booking validation, and administrative controls.", bold_prefix="2. ")
     add_bullet(doc, "Data Persistence Layer (JSON DB & Local Storage): Manages persistent disk-backed storage of movies, showtimes, seats, and bookings, complemented by client-side browser cache for instant resilience.", bold_prefix="3. ")
 
@@ -668,7 +668,7 @@ def build_full_report(output_path):
     add_heading_styled(doc, "4.2 Database Schema & Data Models", level=2)
     add_body_p(doc, "The database structure comprises four primary collections stored in `backend/data/db.json`:")
     
-    add_body_p(doc, "Stores title, certification, duration, genre, trailer link, and language tags (`isTamil`, `isTamilDubbed`).", bold_prefix="1. Movies Collection: ")
+    add_body_p(doc, "Stores title, certification, duration, genre, cast details, poster image, and language tags (isTamil, isTamilDubbed).", bold_prefix="1. Movies Collection: ")
     add_body_p(doc, "Contains `movieId`, `date`, `time`, `hall`, `sound`, `priceTiers` ({executive: 190, classic: 150}), and `bookedSeats` (array of seat codes like ['F01', 'F02']).", bold_prefix="2. Showtimes Collection: ")
     add_body_p(doc, "Stores `bookingId`, `movieTitle`, `showtimeId`, `seats`, `totalAmount`, `paymentMethod`, and timestamp.", bold_prefix="3. Bookings Collection: ")
     add_body_p(doc, "Stores administrative credentials for dashboard access.", bold_prefix="4. Admin Collection: ")
@@ -696,7 +696,8 @@ def build_full_report(output_path):
     add_heading_styled(doc, "CHAPTER 5: IMPLEMENTATION & CORE ALGORITHMS", level=1)
     
     add_heading_styled(doc, "5.1 Showtime Schedule Engine & Date Picker", level=2)
-    add_body_p(doc, "The frontend homepage (`frontend/src/App.jsx`) implements a clean TicketNew/BookMyShow schedule interface. Users select dates from a 7-day horizontal bar (`THU 01 OCT`, `FRI 02 OCT`...). Movies are displayed in individual rows with title, certification, duration, genre, trailer popup button, and showtime boxes. Hovering over any showtime displays a price tooltip (`₹190.00 PREMIUM` | `₹150.00 GOLD`).")
+    add_body_p(doc, "The frontend homepage (`frontend/src/App.jsx`) implements a clean TicketNew/BookMyShow schedule interface. Users select dates from a 7-day horizontal bar (`THU 01 OCT`, `FRI 02 OCT`...). Movies are displayed in individual rows with title, certification, duration, genre, and interactive showtime boxes. Hovering over any showtime displays a price tooltip (`₹190.00 PREMIUM` | `₹150.00 GOLD`).")
+
 
     add_heading_styled(doc, "5.2 Real-Time Showtime Expiration Logic", level=2)
     add_body_p(doc, "To prevent customers from booking showtimes that have already concluded, the system executes an automated real-time clock validation algorithm on client render:")
