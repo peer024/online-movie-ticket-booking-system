@@ -250,7 +250,12 @@
         "A1",
         "A2",
         "D1",
-        "D2"
+        "D2",
+        "K10",
+        "K11",
+        "K12",
+        "K13",
+        "K14"
       ]
     },
     {
@@ -527,6 +532,45 @@
     }
   ],
   "bookings": [
+    {
+      "id": "CV-32199",
+      "movieId": "mov-goat",
+      "movieTitle": "The Greatest of All Time (GOAT)",
+      "showtimeId": "st-goat-2d-1",
+      "showType": "2D",
+      "format": "Dolby Atmos 2D",
+      "date": "Today",
+      "time": "02:45 PM",
+      "hall": "Screen 3 - Dolby Vision 2D",
+      "seats": [
+        "K10",
+        "K11",
+        "K12",
+        "K13",
+        "K14"
+      ],
+      "seatTiers": [
+        "PREMIUM",
+        "PREMIUM",
+        "PREMIUM",
+        "PREMIUM",
+        "PREMIUM"
+      ],
+      "ticketAmount": 1400,
+      "glassesCount": 0,
+      "glassesAmount": 0,
+      "snacks": [],
+      "snacksAmount": 0,
+      "discount": 0,
+      "promoCode": "",
+      "totalAmount": 1400,
+      "paymentMethod": "UPI (Google Pay / PhonePe)",
+      "customerName": "Alex Mercer",
+      "customerEmail": "alex.mercer@cinepass.com",
+      "customerPhone": "+91 98765 43210",
+      "createdAt": "2026-10-06T17:55:45.810Z",
+      "status": "Confirmed"
+    },
     {
       "id": "CV-46400",
       "movieId": "mov-goat",

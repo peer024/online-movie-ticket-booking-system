@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/common/Navbar';
-import TrailerModal from './components/movies/TrailerModal';
 import SeatSelector from './components/booking/SeatSelector';
 import CheckoutModal from './components/booking/CheckoutModal';
 import DigitalTicket from './components/booking/DigitalTicket';
@@ -8,7 +7,8 @@ import AdminDashboard from './components/admin/AdminDashboard';
 import AdminLoginModal from './components/admin/AdminLoginModal';
 
 import { api } from './services/api';
-import { Search, Film, Layers, Flame, Play, ChevronRight, Info } from 'lucide-react';
+import { Search, Film, Layers, Flame, ChevronRight, Info } from 'lucide-react';
+
 
 export default function App() {
   const [currentView, setCurrentView] = useState('home'); // 'home' | 'seat-selection' | 'ticket'
@@ -26,7 +26,6 @@ export default function App() {
   const [hoveredShowtimeId, setHoveredShowtimeId] = useState(null);
 
   // Modals & Active selections
-  const [activeTrailerMovie, setActiveTrailerMovie] = useState(null);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [selectedShowtime, setSelectedShowtime] = useState(null);
 
@@ -420,16 +419,6 @@ export default function App() {
                           <span className="text-gray-500 text-[11px]">{movie.duration}</span>
                           <span className="text-gray-400">•</span>
                           <span className="text-gray-500 text-[11px]">{movie.genre?.join(', ')}</span>
-
-                          {movie.trailerUrl && (
-                            <button
-                              onClick={() => setActiveTrailerMovie(movie)}
-                              className="ml-2 inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 hover:text-rose-700 cursor-pointer"
-                            >
-                              <Play className="w-3 h-3 fill-rose-600" />
-                              <span>Trailer</span>
-                            </button>
-                          )}
                         </div>
                       </div>
 
@@ -519,12 +508,6 @@ export default function App() {
         />
       )}
 
-      {activeTrailerMovie && (
-        <TrailerModal
-          movie={activeTrailerMovie}
-          onClose={() => setActiveTrailerMovie(null)}
-        />
-      )}
 
       {showCheckoutModal && (
         <CheckoutModal
